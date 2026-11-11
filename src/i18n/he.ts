@@ -96,6 +96,8 @@ export const he = {
     savePassword: "שמירת סיסמה",
     passwordSaved: "הסיסמה נשמרה.",
     setPasswordTitle: "בחירת סיסמה",
+    linkInvalid: "הקישור פג תוקף או שאינו תקין. אפשר לבקש קישור חדש.",
+    requestNewLink: "לבקשת קישור חדש",
     googleNotReady: "הכניסה עם Google עוד לא הופעלה. אפשר להירשם עם אימייל וסיסמה.",
     errors: {
       invalid: "האימייל או הסיסמה לא נכונים.",
