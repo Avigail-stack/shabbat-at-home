@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { PageShell } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,24 @@ function ResetPassword() {
   const navigate = useNavigate();
   const [pw, setPw] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hasSession, setHasSession] = useState<boolean | null>(null);
+  useEffect(() => {
+    const check = () => supabase.auth.getSession().then(({ data }) => setHasSession(!!data.session));
+    const timer = setTimeout(check, 400); // let the email link finish signing in
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => { if (s) setHasSession(true); });
+    return () => { clearTimeout(timer); data.subscription.unsubscribe(); };
+  }, []);
+  if (hasSession === false) {
+    return (
+      <PageShell narrow>
+        <div className="space-y-4 rounded-2xl border border-border bg-card p-6">
+          <h1 className="text-3xl font-bold text-primary">{A.setPasswordTitle}</h1>
+          <p role="alert" className="rounded-xl bg-danger-bg p-4 font-semibold text-danger">{A.linkInvalid}</p>
+          <Button asChild><Link to="/auth">{A.requestNewLink}</Link></Button>
+        </div>
+      </PageShell>
+    );
+  }
   async function submit(e: FormEvent) {
     e.preventDefault();
     if (pw.length < 8) return void toast.error(A.errors.short);

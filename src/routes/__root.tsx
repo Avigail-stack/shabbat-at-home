@@ -11,6 +11,9 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { handleAuthLink } from "@/lib/auth-links";
+import { t } from "@/i18n";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -131,7 +134,19 @@ function RootComponent() {
   const router = useRouter();
 
   useEffect(() => {
+    handleAuthLink().then((r) => {
+      if (r.kind === "error") {
+        toast.error(t.auth.linkInvalid);
+        router.navigate({ to: "/auth", replace: true });
+      } else if (r.kind === "ok" && window.location.pathname !== r.to) router.navigate({ to: r.to, replace: true });
+    });
+  }, [router]);
+
+  useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY" && window.location.pathname !== "/reset-password") {
+        router.navigate({ to: "/reset-password", replace: true });
+      }
       if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
       router.invalidate();
       if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
