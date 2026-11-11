@@ -5,7 +5,7 @@ import { t } from "@/i18n";
 
 export function StepFrame({ title, step, total, children, onBack, onNext, nextLabel, nextDisabled, busy }: {
   title: string; step?: number; total?: number; children: ReactNode;
-  onBack?: () => void; onNext?: () => void; nextLabel?: string; nextDisabled?: boolean; busy?: boolean;
+  onBack?: (() => void) | undefined; onNext?: (() => void) | undefined; nextLabel?: string | undefined; nextDisabled?: boolean; busy?: boolean;
 }) {
   const O = t.onboarding;
   return (
