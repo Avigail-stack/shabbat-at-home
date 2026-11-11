@@ -39,12 +39,12 @@ function Settings() {
 
   async function setChannel(c: Ch) {
     const { error } = await supabase.from("persons").update({ notification_channel: c }).eq("id", data!.uid);
-    if (error) return void toast.error(friendlyDbError(error));
+    if (error) return void toast.error(friendlyDbError(error.message));
     toast.success(S.saved); refresh();
   }
   async function setContact(c: Cm) {
     const { error } = await supabase.from("host_profiles").update({ preferred_contact: c }).eq("person_id", data!.uid);
-    if (error) return void toast.error(friendlyDbError(error));
+    if (error) return void toast.error(friendlyDbError(error.message));
     toast.success(S.saved); refresh();
   }
   async function savePw(e: FormEvent) {
