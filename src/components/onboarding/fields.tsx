@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 
-export function Field({ id, label, hint, children }: { id?: string; label: string; hint?: string; children: ReactNode }) {
+export function Field({ id, label, hint, children }: { id?: string; label: string; hint?: string | undefined; children: ReactNode }) {
   return (
     <div className="space-y-1.5">
       <Label htmlFor={id} className="text-base font-semibold">{label}</Label>
@@ -15,7 +15,7 @@ export function Field({ id, label, hint, children }: { id?: string; label: strin
   );
 }
 
-export function TextInput(props: { id: string; label: string; hint?: string; value: string; onChange: (v: string) => void; type?: string; dir?: "ltr" | "rtl"; inputMode?: "numeric" | "tel" | "text" }) {
+export function TextInput(props: { id: string; label: string; hint?: string | undefined; value: string; onChange: (v: string) => void; type?: string; dir?: "ltr" | "rtl"; inputMode?: "numeric" | "tel" | "text" }) {
   return (
     <Field id={props.id} label={props.label} hint={props.hint}>
       <Input id={props.id} type={props.type ?? "text"} dir={props.dir} inputMode={props.inputMode} className="h-11 text-base" value={props.value} onChange={(e) => props.onChange(e.target.value)} />
@@ -23,7 +23,7 @@ export function TextInput(props: { id: string; label: string; hint?: string; val
   );
 }
 
-export function TextArea(props: { id: string; label: string; hint?: string; value: string; onChange: (v: string) => void }) {
+export function TextArea(props: { id: string; label: string; hint?: string | undefined; value: string; onChange: (v: string) => void }) {
   return (
     <Field id={props.id} label={props.label} hint={props.hint}>
       <Textarea id={props.id} rows={4} maxLength={1000} className="text-base" value={props.value} onChange={(e) => props.onChange(e.target.value)} />

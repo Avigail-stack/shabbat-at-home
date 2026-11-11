@@ -10,7 +10,7 @@ export function CitySelect({ id, label, value, onChange }: { id: string; label: 
   });
   return (
     <Field id={id} label={label}>
-      <Select value={value || undefined} onValueChange={onChange}>
+      <Select {...(value ? { value } : {})} onValueChange={onChange}>
         <SelectTrigger id={id} className="h-11 text-base"><SelectValue placeholder="—" /></SelectTrigger>
         <SelectContent>
           {(data ?? []).map((c) => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}

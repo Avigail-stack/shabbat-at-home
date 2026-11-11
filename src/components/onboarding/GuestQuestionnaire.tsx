@@ -56,11 +56,11 @@ export function GuestQuestionnaire({ person, profile, onDone }: { person: Tables
 
   async function next() {
     const err = check();
-    if (err) return toast.error(err);
+    if (err) return void toast.error(err);
     setBusy(true);
     if (step === 0 && dob !== person.date_of_birth) {
       const { error } = await supabase.from("persons").update({ date_of_birth: dob }).eq("id", person.id);
-      if (error) { setBusy(false); return toast.error(friendlyDbError(error.message)); }
+      if (error) { setBusy(false); return void toast.error(friendlyDbError(error.message)); }
     }
     const patch: TablesUpdate<"guest_profiles"> = {
       gender: g.gender, marital_status: g.marital_status, party_type: g.party_type,
@@ -79,14 +79,14 @@ export function GuestQuestionnaire({ person, profile, onDone }: { person: Tables
     const { error } = await supabase.from("guest_profiles").update(patch).eq("person_id", person.id);
     if (!error && last) await supabase.from("persons").update({ onboarding_step: "done" }).eq("id", person.id);
     setBusy(false);
-    if (error) return toast.error(friendlyDbError(error.message));
+    if (error) return void toast.error(friendlyDbError(error.message));
     if (last) onDone();
     else setStep(step + 1);
   }
 
   const showEscort = g.party_type === "group";
   return (
-    <StepFrame title={Q.steps[step]} step={step} total={total} busy={busy}
+    <StepFrame title={Q.steps[step] ?? ""} step={step} total={total} busy={busy}
       onBack={step > 0 ? () => setStep(step - 1) : undefined}
       onNext={next} nextLabel={last ? O.finish : undefined} nextDisabled={last && !charter}>
       {step === 0 && (

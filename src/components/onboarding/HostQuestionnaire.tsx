@@ -69,12 +69,12 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
 
   async function next() {
     const err = check();
-    if (err) return toast.error(err);
+    if (err) return void toast.error(err);
     setBusy(true);
     if (step === 4) {
       await supabase.from("host_rooms").delete().eq("host_id", person.id);
       const { error } = await supabase.from("host_rooms").insert(rooms.map((r) => ({ host_id: person.id, name: r.name.trim().slice(0, 60), beds: r.beds })));
-      if (error) { setBusy(false); return toast.error(friendlyDbError(error.message)); }
+      if (error) { setBusy(false); return void toast.error(friendlyDbError(error.message)); }
     }
     const patch: TablesUpdate<"host_profiles"> = {
       family_name: h.family_name, spouse_first_name: h.spouse_first_name, spouse_id_number: h.spouse_id_number,
@@ -99,14 +99,14 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
     const { error } = await supabase.from("host_profiles").update(patch).eq("person_id", person.id);
     if (!error && last) await supabase.from("persons").update({ onboarding_step: "done" }).eq("id", person.id);
     setBusy(false);
-    if (error) return toast.error(friendlyDbError(error.message));
+    if (error) return void toast.error(friendlyDbError(error.message));
     if (last) onDone();
     else setStep(step + 1);
   }
 
   const L = t.help.lodging;
   return (
-    <StepFrame title={Q.steps[step]} step={step} total={total} busy={busy}
+    <StepFrame title={Q.steps[step] ?? ""} step={step} total={total} busy={busy}
       onBack={step > 0 ? () => setStep(step - 1) : undefined}
       onNext={next} nextLabel={last ? O.finish : undefined} nextDisabled={last && !(charter && behavior)}>
       {step === 0 && <TextInput id="fam" label={Q.familyName} value={h.family_name ?? ""} onChange={(v) => set("family_name", v)} />}

@@ -31,11 +31,11 @@ function ResetPassword() {
   const [busy, setBusy] = useState(false);
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (pw.length < 8) return toast.error(A.errors.short);
+    if (pw.length < 8) return void toast.error(A.errors.short);
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password: pw });
     setBusy(false);
-    if (error) return toast.error(A.errors.generic);
+    if (error) return void toast.error(A.errors.generic);
     toast.success(A.passwordSaved);
     navigate({ to: "/home" });
   }

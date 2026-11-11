@@ -58,7 +58,7 @@ function AuthPage() {
   async function submit(e: FormEvent, kind: "login" | "signup") {
     e.preventDefault();
     const parsed = creds.safeParse({ email, password });
-    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
+    if (!parsed.success) return void toast.error(parsed.error.issues[0]?.message ?? A.errors.generic);
     setBusy(true);
     try {
       if (kind === "login") {
@@ -80,7 +80,7 @@ function AuthPage() {
   async function forgot(e: FormEvent) {
     e.preventDefault();
     const ok = z.string().email().safeParse(email.trim());
-    if (!ok.success) return toast.error(A.errors.email);
+    if (!ok.success) return void toast.error(A.errors.email);
     setBusy(true);
     await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: `${window.location.origin}/reset-password` });
     setBusy(false);

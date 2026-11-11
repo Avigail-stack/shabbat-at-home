@@ -24,7 +24,7 @@ export function PhoneStep({ onDone }: { onDone: () => void }) {
   const clean = phone.replace(/\D/g, "");
 
   async function send(m: OtpMethod) {
-    if (!PHONE_RE.test(clean)) return toast.error(P.invalidPhone);
+    if (!PHONE_RE.test(clean)) return void toast.error(P.invalidPhone);
     setBusy(true);
     try {
       await otpProvider.send(clean, m);
@@ -38,7 +38,7 @@ export function PhoneStep({ onDone }: { onDone: () => void }) {
     }
   }
   async function verify() {
-    if (!OTP_RE.test(code)) return toast.error(P.invalidCode);
+    if (!OTP_RE.test(code)) return void toast.error(P.invalidCode);
     setBusy(true);
     try {
       await otpProvider.verify(clean, code);
@@ -94,9 +94,9 @@ export function DetailsStep({ person, onDone }: { person: Person; onDone: () => 
   const idLocked = !!person.id_number;
 
   async function save() {
-    if (!first.trim() || !last.trim() || !email.trim() || !channel) return toast.error(O.required);
-    if (containsContactInfo(first) || containsContactInfo(last)) return toast.error(O.contactBlocked);
-    if (!idLocked && !isValidIsraeliId(idNum.trim())) return toast.error(D.invalidId);
+    if (!first.trim() || !last.trim() || !email.trim() || !channel) return void toast.error(O.required);
+    if (containsContactInfo(first) || containsContactInfo(last)) return void toast.error(O.contactBlocked);
+    if (!idLocked && !isValidIsraeliId(idNum.trim())) return void toast.error(D.invalidId);
     setBusy(true);
     const patch: Partial<Person> = {
       first_name: first.trim().slice(0, 50),
@@ -108,7 +108,7 @@ export function DetailsStep({ person, onDone }: { person: Person; onDone: () => 
     if (!idLocked) patch.id_number = idNum.trim();
     const { error } = await supabase.from("persons").update(patch).eq("id", person.id);
     setBusy(false);
-    if (error) return toast.error(friendlyDbError(error.message));
+    if (error) return void toast.error(friendlyDbError(error.message));
     onDone();
   }
 
@@ -149,7 +149,7 @@ export function RoleStep({ person, onDone }: { person: Person; onDone: () => voi
     const r3 = await supabase.from("persons").update({ onboarding_step: role }).eq("id", person.id);
     setBusy(false);
     const err = r1.error ?? r2.error ?? r3.error;
-    if (err) return toast.error(friendlyDbError(err.message));
+    if (err) return void toast.error(friendlyDbError(err.message));
     onDone();
   }
   return (
