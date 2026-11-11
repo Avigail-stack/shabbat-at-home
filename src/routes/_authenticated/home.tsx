@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/site/PageShell";
@@ -52,6 +52,7 @@ function Home() {
   return (
     <PageShell>
       <h1 className="text-4xl font-bold text-primary">{H.hello(data.person.first_name ?? "")}</h1>
+      <Button asChild variant="outline" className="mt-4"><Link to="/settings">{t.settings.link}</Link></Button>
       {frozen && <p role="status" className="mt-4 rounded-xl bg-warning-bg p-4 font-semibold text-warning">{H.frozen}</p>}
 
       {hasGuest && hasHost && !side && (
