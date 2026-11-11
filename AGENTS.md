@@ -28,3 +28,12 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- All UI strings live in `src/i18n/he.ts` (accessed via `t` from `@/i18n`); more languages are added as sibling files.
+- External providers (OTP, notifications, identity verification) sit behind interfaces in `src/services/`; Phase 1 uses mocks so real providers plug in without touching screens.
+- Every business rule is enforced twice: client mirror in `src/lib/validation.ts` and database triggers/functions (the database is authoritative).
+- Roles live only in `public.user_roles`; staff (rep/admin) have no `persons` row and get their role only after confirming an invited email (`staff_invitations`).
+- Guests never read `host_profiles` directly; staged reveal of address/phone goes through dedicated SECURITY DEFINER functions.
+- Requests/responses/hostings are written only through database functions (seat locking in one transaction), so users have read-only grants on them.
+- The connected Supabase project does not auto-expose tables: every new table needs explicit, minimal GRANTs plus RLS policies.
