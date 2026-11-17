@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "signed-in read settings" ON public.app_settings;
