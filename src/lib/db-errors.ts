@@ -4,6 +4,10 @@ import { t } from "@/i18n";
 export function friendlyDbError(message: string | undefined): string {
   const m = message ?? "";
   const O = t.onboarding;
+  if (m.includes("double_booking")) return t.hostings.booked;
+  if (m.includes("not_enough_seats")) return t.hostings.capacity;
+  if (m.includes("reason_required")) return t.hostings.required;
+  if (m.includes("response_unavailable") || m.includes("hosting_unavailable")) return t.hostings.unavailable;
   if (m.includes("response_limit")) return t.invitations.limit;
   if (m.includes("already_responded")) return t.invitations.duplicate;
   if (m.includes("invitation_unavailable")) return t.invitations.unavailable;

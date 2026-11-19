@@ -3,13 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "./Logo";
 import { useAuthUser } from "@/hooks/use-auth-user";
 import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@/i18n";
+import { hostingSummaries } from "@/lib/hostings.functions";
+import { HostingList } from "@/components/areas/HostingList";
 
 export function SiteHeader() {
   const { user } = useAuthUser();
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const summaries = useQuery({ queryKey: ["hostings"], queryFn: () => hostingSummaries(), enabled: !!user });
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
@@ -20,8 +23,8 @@ export function SiteHeader() {
     <header className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <Logo />
-        <nav className="flex items-center gap-1">
-          <span data-confirmed-reminder-slot="menu" />
+        <nav className="flex flex-wrap items-center gap-1">
+          {summaries.data && <HostingList items={summaries.data} reminder />}
           <Button asChild variant="ghost" size="sm">
             <Link to="/help">{t.nav.help}</Link>
           </Button>

@@ -11,6 +11,8 @@ import { meQuery } from "@/lib/me";
 import { canViewInvitations } from "@/lib/validation";
 import { t } from "@/i18n";
 import { WeeklyGuestDialog } from "@/components/onboarding/WeeklyGuestDialog";
+import { hostingSummaries } from "@/lib/hostings.functions";
+import { HostingList } from "@/components/areas/HostingList";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -36,6 +38,7 @@ function Home() {
   const [side, setSide] = useState<Side | null>(null);
   const getGuest = useServerFn(guestAreaData); const getHost = useServerFn(hostAreaData);
   const ready = !!data?.person && canViewInvitations(data.person.onboarding_step, data.identity?.status);
+  const summaries = useQuery({ queryKey: ["hostings"], queryFn: () => hostingSummaries(), enabled: ready });
   const guestArea = useQuery({ queryKey: ["guest-area"], queryFn: () => getGuest(), enabled: ready && !!data?.guest && (!data.host || side === "guest") });
   const hostArea = useQuery({ queryKey: ["host-area"], queryFn: () => getHost(), enabled: ready && !!data?.host && (!data.guest || side === "host") });
 
@@ -61,6 +64,7 @@ function Home() {
 
   return (
     <PageShell>
+      {active === "host" && summaries.data && <HostingList items={summaries.data} reminder />}
       <h1 className="text-4xl font-bold text-primary">{H.hello(data.person.first_name ?? "")}</h1>
       <Button asChild variant="outline" className="mt-4"><Link to="/settings">{t.settings.link}</Link></Button>
       <Button asChild variant="outline" className="mt-4 ms-2"><Link to="/preferences">{t.preferences.title}</Link></Button>
@@ -84,6 +88,7 @@ function Home() {
         <p role="status" className="mt-6 rounded-xl bg-danger-bg p-4 font-semibold text-danger">{H.rejected}</p>
       )}
       {active === "guest" && guestArea.data && <GuestArea data={guestArea.data} />}
+      {summaries.data && <HostingList items={summaries.data.filter((h) => h.side === active)} />}
       {active === "host" && hostArea.data && data.host && <HostArea data={hostArea.data} profile={data.host} />}
       {(guestArea.error || hostArea.error) && <p role="alert" className="mt-6 text-danger">{t.auth.errors.generic}</p>}
     </PageShell>

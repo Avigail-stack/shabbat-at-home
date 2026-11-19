@@ -1,0 +1,1 @@
+CREATE INDEX requests_guest_date_idx ON public.requests(guest_id,shabbat_date);

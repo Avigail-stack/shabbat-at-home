@@ -8,21 +8,22 @@ export const guestAreaData = createServerFn({ method: "POST" }).middleware([requ
   const db = context.supabase;
   const { error: expiryError } = await db.rpc("expire_my_responses");
   if (expiryError) throw new Error(expiryError.message);
-  const [list, guest, person, cities, settings, responses, dates] = await Promise.all([
+  const [list, guest, person, cities, settings, responses, dates, hostings] = await Promise.all([
     db.rpc("list_guest_invitations"), db.from("guest_profiles").select("*").eq("person_id", context.userId).single(),
     db.from("persons").select("date_of_birth").eq("id", context.userId).single(),
     db.from("cities").select("*"), db.from("app_settings").select("key,value"),
     db.from("responses").select("id,availability_id,message,status,availability(shabbat_date,unit)").eq("guest_id", context.userId).order("created_at", { ascending: false }),
     db.from("shabbatot").select("date,parsha").gte("date", new Date().toISOString().slice(0, 10)).order("date"),
+    db.from("hostings").select("response_id,availability_id,status").eq("guest_id", context.userId),
   ]);
-  for (const result of [list, guest, person, cities, settings, responses, dates]) if (result.error) throw new Error(result.error.message);
+  for (const result of [list, guest, person, cities, settings, responses, dates, hostings]) if (result.error) throw new Error(result.error.message);
   if (!guest.data) throw new Error("registration_required");
   const g = guest.data;
   const city = cities.data?.find((c) => c.name === g.city);
   const rawWeights = settings.data?.find((s) => s.key === "ranking_weights")?.value;
   const weights = { ...DEFAULT_WEIGHTS, ...(typeof rawWeights === "object" && rawWeights !== null ? rawWeights : {}) } as RankingWeights;
   const invitations = (list.data as unknown as Invitation[]).map((i) => rankInvitation(i, { ...g, age: person.data?.date_of_birth ? ageOn(person.data.date_of_birth) : null, lat: city?.lat ?? null, lng: city?.lng ?? null }, weights)).sort((a, b) => b.score - a.score || a.date.localeCompare(b.date));
-  return { invitations, responses: responses.data ?? [], dates: dates.data ?? [] };
+  return { invitations, responses: responses.data ?? [], dates: dates.data ?? [], hostings: hostings.data ?? [] };
 });
 
 export const hostAreaData = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {

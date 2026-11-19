@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { t } from "@/i18n";
 import { shabbatLabel } from "@/lib/invitations";
 import type { guestAreaData } from "@/lib/areas.functions";
+import { responseHostingCancelled } from "@/lib/validation";
 
 export function GuestArea({ data }: { data: Awaited<ReturnType<typeof guestAreaData>> }) {
   const I = t.invitations;
@@ -21,7 +22,7 @@ export function GuestArea({ data }: { data: Awaited<ReturnType<typeof guestAreaD
     {list.length ? <div className="grid gap-4 md:grid-cols-2">{list.map((i) => <InvitationCard key={i.id} invitation={i} />)}</div> : <p className="py-8 text-muted-foreground">{I.empty}</p>}
     <div className="border-t border-border pt-6"><h2 className="text-2xl font-bold text-primary">{I.responses} · {I.tracking(data.responses.filter((r) => r.status === "pending").length)}</h2>
       {!data.responses.length && <p className="mt-3 text-muted-foreground">{I.noResponses}</p>}
-      {data.responses.map((r) => <div key={r.id} className="flex flex-wrap justify-between gap-2 border-b border-border py-4"><span>{r.availability && shabbatLabel(r.availability.shabbat_date)}</span><span className="text-muted-foreground">{r.status === "expired" ? I.expired : I.waiting}</span></div>)}
+      {data.responses.map((r) => <div key={r.id} className="flex flex-wrap justify-between gap-2 border-b border-border py-4"><span>{r.availability && shabbatLabel(r.availability.shabbat_date)}</span><span className="text-muted-foreground">{responseHostingCancelled(r.id, data.hostings) ? t.hostings.cancelled : r.status === "expired" ? I.expired : r.status === "declined" ? t.hostings.declined : r.status === "withdrawn" ? t.hostings.withdrawn : r.status === "accepted" ? t.hostings.accepted : I.waiting}</span></div>)}
     </div>
   </section>;
 }

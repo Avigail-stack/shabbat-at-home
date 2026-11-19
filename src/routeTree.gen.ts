@@ -19,6 +19,7 @@ import { Route as AuthenticatedHomeRouteImport } from './routes/_authenticated/h
 import { Route as AuthenticatedOnboardingRouteImport } from './routes/_authenticated/onboarding'
 import { Route as AuthenticatedPreferencesRouteImport } from './routes/_authenticated/preferences'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedHostingsIdRouteImport } from './routes/_authenticated/hostings.$id'
 import { Route as AuthenticatedInvitationsIdRouteImport } from './routes/_authenticated/invitations.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -71,6 +72,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedHostingsIdRoute = AuthenticatedHostingsIdRouteImport.update({
+  id: '/hostings/$id',
+  path: '/hostings/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInvitationsIdRoute =
   AuthenticatedInvitationsIdRouteImport.update({
     id: '/invitations/$id',
@@ -88,6 +94,7 @@ export interface FileRoutesByFullPath {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/hostings/$id': typeof AuthenticatedHostingsIdRoute
   '/invitations/$id': typeof AuthenticatedInvitationsIdRoute
 }
 export interface FileRoutesByTo {
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/onboarding': typeof AuthenticatedOnboardingRoute
   '/preferences': typeof AuthenticatedPreferencesRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/hostings/$id': typeof AuthenticatedHostingsIdRoute
   '/invitations/$id': typeof AuthenticatedInvitationsIdRoute
 }
 export interface FileRoutesById {
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/_authenticated/onboarding': typeof AuthenticatedOnboardingRoute
   '/_authenticated/preferences': typeof AuthenticatedPreferencesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/hostings/$id': typeof AuthenticatedHostingsIdRoute
   '/_authenticated/invitations/$id': typeof AuthenticatedInvitationsIdRoute
 }
 export interface FileRouteTypes {
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/preferences'
     | '/settings'
+    | '/hostings/$id'
     | '/invitations/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/onboarding'
     | '/preferences'
     | '/settings'
+    | '/hostings/$id'
     | '/invitations/$id'
   id:
     | '__root__'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/_authenticated/onboarding'
     | '/_authenticated/preferences'
     | '/_authenticated/settings'
+    | '/_authenticated/hostings/$id'
     | '/_authenticated/invitations/$id'
   fileRoutesById: FileRoutesById
 }
@@ -237,6 +249,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/hostings/$id': {
+      id: '/_authenticated/hostings/$id'
+      path: '/hostings/$id'
+      fullPath: '/hostings/$id'
+      preLoaderRoute: typeof AuthenticatedHostingsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/invitations/$id': {
       id: '/_authenticated/invitations/$id'
       path: '/invitations/$id'
@@ -252,6 +271,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
   AuthenticatedPreferencesRoute: typeof AuthenticatedPreferencesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedHostingsIdRoute: typeof AuthenticatedHostingsIdRoute
   AuthenticatedInvitationsIdRoute: typeof AuthenticatedInvitationsIdRoute
 }
 
@@ -260,6 +280,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
   AuthenticatedPreferencesRoute: AuthenticatedPreferencesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedHostingsIdRoute: AuthenticatedHostingsIdRoute,
   AuthenticatedInvitationsIdRoute: AuthenticatedInvitationsIdRoute,
 }
 

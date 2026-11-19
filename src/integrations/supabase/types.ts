@@ -684,11 +684,15 @@ export type Database = {
           cancel_reason: string | null
           cancelled_at: string | null
           cancelled_by: string | null
+          cancelled_on_friday: boolean
+          candle_lighting_at: string | null
           contact_method: Database["public"]["Enums"]["contact_method"]
           created_at: string
+          exceptional_cancellation: boolean
           guest_id: string
           host_id: string
           id: string
+          late_cancellation: boolean
           party_size: number
           response_id: string
           shabbat_date: string
@@ -705,11 +709,15 @@ export type Database = {
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          cancelled_on_friday?: boolean
+          candle_lighting_at?: string | null
           contact_method: Database["public"]["Enums"]["contact_method"]
           created_at?: string
+          exceptional_cancellation?: boolean
           guest_id: string
           host_id: string
           id?: string
+          late_cancellation?: boolean
           party_size?: number
           response_id: string
           shabbat_date: string
@@ -726,11 +734,15 @@ export type Database = {
           cancel_reason?: string | null
           cancelled_at?: string | null
           cancelled_by?: string | null
+          cancelled_on_friday?: boolean
+          candle_lighting_at?: string | null
           contact_method?: Database["public"]["Enums"]["contact_method"]
           created_at?: string
+          exceptional_cancellation?: boolean
           guest_id?: string
           host_id?: string
           id?: string
+          late_cancellation?: boolean
           party_size?: number
           response_id?: string
           shabbat_date?: string
@@ -1357,6 +1369,16 @@ export type Database = {
         }
         Returns: string
       }
+      cancel_confirmed_hosting: {
+        Args: {
+          _actor: string
+          _candle: string
+          _id: string
+          _note: string
+          _reason: string
+        }
+        Returns: undefined
+      }
       change_host_shabbat: {
         Args: { _action: string; _id: string }
         Returns: undefined
@@ -1365,7 +1387,19 @@ export type Database = {
         Args: { _token_hash: string }
         Returns: undefined
       }
+      confirm_host_response: {
+        Args: {
+          _contact: Database["public"]["Enums"]["contact_method"]
+          _response: string
+          _save_default: boolean
+        }
+        Returns: string
+      }
       contains_contact_info: { Args: { t: string }; Returns: boolean }
+      decline_host_response: {
+        Args: { _note: string; _reason: string; _response: string }
+        Returns: undefined
+      }
       expire_my_responses: { Args: never; Returns: undefined }
       guest_ready: { Args: { _uid: string }; Returns: boolean }
       has_role: {
@@ -1376,6 +1410,7 @@ export type Database = {
         Returns: boolean
       }
       host_response_summaries: { Args: never; Returns: Json }
+      hosting_details: { Args: { _id: string }; Returns: Json }
       invitation_before_cutoff: { Args: { _date: string }; Returns: boolean }
       invitation_eligible: {
         Args: { _availability: string; _uid: string }
@@ -1384,6 +1419,7 @@ export type Database = {
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       is_valid_il_id: { Args: { id: string }; Returns: boolean }
       list_guest_invitations: { Args: never; Returns: Json }
+      my_hosting_summaries: { Args: never; Returns: Json }
       request_phone_code: {
         Args: { _method: string; _phone: string }
         Returns: undefined

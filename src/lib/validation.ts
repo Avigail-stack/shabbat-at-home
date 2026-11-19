@@ -1,5 +1,19 @@
 // Client-side mirrors of the database rules. The database enforces the same rules again.
 
+export function canConfirmHosting(pending: boolean, expires: string, seats: number, party: number, alreadyBooked: boolean, now = new Date()) {
+  return pending && new Date(expires) > now && seats >= party && !alreadyBooked;
+}
+export function cancellationWindow(candle: string, now = new Date(), exceptionalHours = 24, lateHours = 72) {
+  const hours = (new Date(candle).getTime() - now.getTime()) / 3600000;
+  return { exceptional: hours < exceptionalHours, late: hours < lateHours };
+}
+export function validCancellation(reason: string, note: string, exceptional: boolean) {
+  return (exceptional ? ["illness", "bereavement", "other"] : ["illness", "bereavement", "plans_changed", "cannot_arrive", "other"]).includes(reason) && (!exceptional || note.trim().length > 0) && note.length <= 2000;
+}
+export function contactVisible(status: string) { return status === "confirmed"; }
+export function responseHostingCancelled(responseId: string, hostings: { response_id: string; status: string }[]) { return hostings.some((h) => h.response_id === responseId && h.status.startsWith("cancelled")); }
+export function hostingSeatsAfterCancellation(seats: number, left: number, party: number) { return Math.min(seats, left + party); }
+
 export const PHONE_RE = /^05\d{8}$/;
 export const OTP_RE = /^\d{6}$/;
 

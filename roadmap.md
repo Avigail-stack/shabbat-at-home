@@ -1,5 +1,11 @@
 # Roadmap — שבת בבית
 
+## Pass 2d
+- [x] Transactional confirmation, seat lock, double-booking prevention and private contact reveal
+- [x] Guest/host hosting pages, candle-lighting, contact links and host reminders
+- [x] Decline with staff-only reason; cancellation, returned seats, reopened request and urgent/late records
+- [x] Unit tests and final demo-account browser check (confirmation, both contact methods, decline and both cancellation sides)
+
 ## Pass 2c
 - [x] Host tabs/calendar, add/cancel/reopen/delete, last-used type, no countdown, reminder slot
 - [x] Guest filters, safe invitation detail, response message/three limit/24h expiry
@@ -31,6 +37,7 @@
   - [x] Email links (recovery/confirm/invite, hash + PKCE + token_hash, Hebrew expired-link error)
   - [x] Settings: channel, password, host contact method
   - [x] "ההעדפות שלי" (edit questionnaire answers)
-  - [ ] Host area tabs, guest area, confirm DB function, notifications, feedback + flag
+  - [x] Host area tabs, guest area, confirmation/decline/cancellation
+  - [ ] Notifications/inbox, feedback + flag — deferred to next pass
 - [ ] Pass 3: admin area (staff login, queues, users, hostings, report, logs)
 - [ ] Pass 4: seed families/guests, tests, polish

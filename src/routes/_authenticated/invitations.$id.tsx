@@ -23,7 +23,7 @@ function InvitationPage() {
   const { id } = Route.useParams(); const { data } = useSuspenseQuery(options); const send = useServerFn(sendGuestResponse); const qc = useQueryClient();
   const [message, setMessage] = useState(""); const [busy, setBusy] = useState(false); const I = t.invitations;
   const i = data.invitations.find((invitation) => invitation.id === id);
-  const existing = data.responses.some((r) => r.availability_id === id && (r.status === "pending" || r.status === "accepted"));
+  const existing = data.responses.some((r) => r.availability_id === id && r.status === "pending") || data.hostings.some((h) => h.availability_id === id && (h.status === "confirmed" || h.status === "under_review"));
   const count = data.responses.filter((r) => r.status === "pending").length;
   async function respond() {
     if (containsContactInfo(message)) return void toast.error(t.onboarding.contactBlocked);

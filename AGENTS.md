@@ -32,7 +32,7 @@ use the editor.
 ## Project rules
 - Invitation reads use authenticated safe-projection database functions, never direct guest reads of host profiles; eligibility and response limits are checked transactionally in the database.
 - Ranking uses a pure shared scoring module and settings weights; absent host familiarity/life-stage/character preference data is neutral rather than invented, with feedback counted from guest overall answers after hosted visits.
-- Availability mutations use owner-checked database functions; confirmed hosting changes are blocked until the confirmation/cancellation pass, and reminder slots remain empty until confirmations exist.
+- Availability mutations use owner-checked database functions; confirmed hosting changes must go through hosting cancellation so seats and guest requests stay consistent.
 - Pre-account phone verification uses a one-hour HttpOnly cookie backed by a hashed, single-use Supabase proof; authenticated claiming avoids exposing phone proof tokens to browser scripts.
 - Identity verification is account-wide before role selection; an owner-locked database action caps the portfolio mock at three attempts and persists manual-review state without storing photos.
 - All UI strings live in `src/i18n/he.ts` (accessed via `t` from `@/i18n`); more languages are added as sibling files.
@@ -48,3 +48,7 @@ use the editor.
 - Guests never read `host_profiles` directly; staged reveal of address/phone goes through dedicated SECURITY DEFINER functions.
 - Requests/responses/hostings are written only through database functions (seat locking in one transaction), so users have read-only grants on them.
 - The connected Supabase project does not auto-expose tables: every new table needs explicit, minimal GRANTs plus RLS policies.
+- Hosting confirmation serializes on the guest then availability then response; a partial unique guest/date index prevents concurrent double bookings.
+- Contact projections are participant-scoped and confirmed-only; decline reasons and cancellation attention fields have no ordinary-user column grants.
+- Cancellation candle times come from bundled Hebcal using city coordinates; only an authenticated, participant-authorized server handler may invoke the service-role-only timing write.
+- Response retries create separate historical requests; cancelled acceptances are joined by response ID so later bookings never overwrite their history.
