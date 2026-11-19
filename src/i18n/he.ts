@@ -1,7 +1,7 @@
 // All UI strings live here. More languages come later: add a sibling file with the same shape.
 export const he = {
   app: { name: "שבת בבית", tagline: "שבת אחת. בית אחד. בלי מסכים." },
-  demo: { banner: "אתר הדגמה – אין להזין פרטים אמיתיים" },
+  demo: { banner: "אתר הדגמה – אין להזין פרטים אמיתיים", guest: "כניסה כאורח לדוגמה", host: "כניסה כמארח לדוגמה", staff: "כניסה כצוות לדוגמה", error: "הכניסה לדוגמה אינה זמינה כרגע. נסו שוב." },
   hostingDefaults: {
     title: "מה מתאים בדרך כלל?",
     full: "שבת שלמה",
@@ -14,6 +14,8 @@ export const he = {
     restRecommendation: "מומלץ להכין פינה או חדר שבו האורח יוכל לנוח",
     commitment: "המשפחה התחייבה: חדר נפרד, דלת ננעלת",
   },
+  preferences: { title: "ההעדפות שלי", save: "שמירת שינויים", saved: "ההעדפות נשמרו.", description: "עריכת ההעדפות והשאלון שלך בשבת בבית." },
+  weekly: { title: "לשבת הזו תרצו…", same: "להמשיך כמו בפעם הקודמת", save: "לשמור שינויים", change: "לשנות", food: "העדפות אוכל", sensitivities: "רגישויות במזון" },
   nav: { home: "דף הבית", help: "חומרי עזרה", login: "כניסה / הרשמה", personal: "האזור האישי", logout: "יציאה", staff: "כניסת צוות" },
   footer: {
     emergency: "במקרה חירום: משטרה 100 · מד״א 101",
@@ -170,6 +172,14 @@ export const he = {
     under18: "פרופיל אורח פתוח מגיל 18 בלבד.",
   },
   guestQ: {
+    companionTitle: "מלווים מבוגרים (מגיל 18)",
+    companionId: "תעודת זהות של המלווה",
+    relation: "קרבה",
+    relations: { spouse: "בן/בת זוג", child: "ילד/ה" },
+    addCompanion: "הוספת מלווה מבוגר/ת",
+    removeCompanion: "הסרת מלווה",
+    minorCount: "מספר ילדים מתחת לגיל 18",
+    invalidCompanions: "יש להזין תעודת זהות תקינה ושונה לכל מלווה, קרבה ומספר ילדים שלם ולא שלילי.",
     steps: ["עליך", "מי מגיע", "שפות ושבת", "אזור", "תחומי עניין", "רגישויות", "קצת עליי", "האמנה"],
     dob: "תאריך לידה",
     gender: "מגדר",
@@ -197,6 +207,18 @@ export const he = {
     aboutHint: "כמה מילים שיעזרו למשפחה להכיר אותך.",
   },
   hostQ: {
+    street: "רחוב",
+    houseNumber: "מספר בית",
+    buildingNumber: "מספר בניין (לא חובה)",
+    recommendation: "המלצה מהקהילה או שיחה עם הצוות",
+    twoRecommenders: "שני ממליצים מהקהילה",
+    staffCall: "אני מעדיפ/ה שיחה עם הצוות",
+    callMethod: "סוג השיחה",
+    callMethods: { video: "וידאו", phone: "טלפון" },
+    callNote: "בשיחה חייב להשתתף בעל הבית",
+    secondRecName: "שם הממליץ השני",
+    secondRecPhone: "טלפון הממליץ השני",
+    invalidRecommendation: "יש לבחור סוג שיחה או להזין שני ממליצים עם שם ומספר נייד תקין.",
     steps: ["המשפחה", "בן/בת הזוג", "כתובת", "הרכב המשפחה", "חדרים ולינה", "כללי לינה", "שפות והעדפות", "ממליץ", "עלינו", "קשר", "אמנה וכללים"],
     familyName: "שם המשפחה",
     dob: "תאריך לידה",

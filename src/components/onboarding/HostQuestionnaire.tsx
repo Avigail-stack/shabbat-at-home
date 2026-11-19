@@ -10,7 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { CharterText, HostRulesText } from "@/components/site/HelpContent";
 import { supabase } from "@/integrations/supabase/client";
 import { friendlyDbError } from "@/lib/db-errors";
-import { canSubmitHost, containsContactInfo, isValidIsraeliId, parseAges } from "@/lib/validation";
+import { canSubmitHost, containsContactInfo, isValidIsraeliId, parseAges, validHostAddress, validHostRecommendation } from "@/lib/validation";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 import { t } from "@/i18n";
 
@@ -20,8 +20,8 @@ const O = t.onboarding;
 const Q = t.hostQ;
 const num = (v: string, max = 120) => (v === "" ? null : Math.max(0, Math.min(max, Number(v) || 0)));
 
-export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<"persons">; profile: H; onDone: () => void }) {
-  const [step, setStep] = useState(Math.min(profile.onboarding_step, Q.steps.length - 1));
+export function HostQuestionnaire({ person, profile, onDone, editing = false }: { person: Tables<"persons">; profile: H; onDone: () => void; editing?: boolean }) {
+  const [step, setStep] = useState(editing ? 0 : Math.min(profile.onboarding_step, Q.steps.length - 1));
   const [h, setH] = useState<H>({ ...profile, family_name: profile.family_name ?? person.last_name });
   const [children, setChildren] = useState(profile.children_ages.join(", "));
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -44,7 +44,7 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
       case 1:
         if (!h.spouse_first_name?.trim()) return O.required;
         return isValidIsraeliId(h.spouse_id_number ?? "") ? null : O.details.invalidId;
-      case 2: return h.street_address?.trim() && h.city && h.neighborhood?.trim() ? null : O.required;
+      case 2: return validHostAddress(h.street, h.house_number, h.neighborhood, h.city) ? null : O.required;
       case 3:
         if (!h.family_composition?.trim() || !h.husband_age || !h.wife_age) return O.required;
         return blocked(h.family_composition) ? O.contactBlocked : null;
@@ -52,7 +52,7 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
         return h.default_with_lodging && rooms.some((r) => !r.name.trim()) ? O.required : null;
       case 5: return !h.default_with_lodging || (h.rule_separate_room && h.rule_lockable_door) ? null : O.required;
       case 6: return h.languages.length ? null : O.required;
-      case 7: return h.recommender_name?.trim() && h.recommender_role?.trim() && h.recommender_phone?.trim() ? null : O.required;
+      case 7: return validHostRecommendation(h.recommendation_mode, h.staff_call_method, [h.recommender_name, h.recommender2_name], [h.recommender_phone, h.recommender2_phone]) ? null : Q.invalidRecommendation;
       case 8:
         if (!h.cannot_provide?.trim()) return O.required;
         return blocked(h.about, h.house_character, h.food_offer, h.cannot_provide, h.kashrut) ? O.contactBlocked : null;
@@ -80,7 +80,7 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
     }
     const patch: TablesUpdate<"host_profiles"> = {
       family_name: h.family_name, spouse_first_name: h.spouse_first_name, spouse_id_number: h.spouse_id_number,
-      street_address: h.street_address, city: h.city, neighborhood: h.neighborhood,
+      street: h.street, house_number: h.house_number, building_number: h.building_number, city: h.city, neighborhood: h.neighborhood,
       family_composition: h.family_composition, husband_age: h.husband_age, wife_age: h.wife_age,
       children_ages: parseAges(children),
       default_unit: h.default_unit, default_with_lodging: h.default_with_lodging,
@@ -89,18 +89,19 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
       rule_description_visible: h.rule_description_visible, rule_no_shared_room: h.rule_no_shared_room,
       languages: h.languages, guest_gender_pref: h.guest_gender_pref,
       recommender_name: h.recommender_name, recommender_role: h.recommender_role, recommender_phone: h.recommender_phone,
+      recommender2_name: h.recommender2_name, recommender2_phone: h.recommender2_phone, recommendation_mode: h.recommendation_mode, staff_call_method: h.staff_call_method,
       interests: h.interests, about: h.about, house_character: h.house_character, kashrut: h.kashrut,
       food_offer: h.food_offer, cannot_provide: h.cannot_provide, preferred_contact: h.preferred_contact,
-      onboarding_step: last ? step : step + 1,
+      ...(!editing ? { onboarding_step: last ? step : step + 1 } : {}),
     };
-    if (last) {
+    if (last && !editing) {
       const now = new Date().toISOString();
       patch.charter_accepted_at = now;
       patch.behavior_rules_accepted_at = now;
       patch.status = "pending";
     }
     const { error } = await supabase.from("host_profiles").update(patch).eq("person_id", person.id);
-    if (!error && last) await supabase.from("persons").update({ onboarding_step: "done" }).eq("id", person.id);
+    if (!error && last && !editing) await supabase.from("persons").update({ onboarding_step: "done" }).eq("id", person.id);
     setBusy(false);
     if (error) return void toast.error(friendlyDbError(error.message));
     if (last) onDone();
@@ -111,17 +112,21 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
   return (
     <StepFrame title={Q.steps[step] ?? ""} step={step} total={total} busy={busy}
       onBack={step > 0 ? () => setStep(step - 1) : undefined}
-      onNext={next} nextLabel={last ? O.finish : undefined} nextDisabled={last && !(charter && behavior)}>
+      onNext={next} nextLabel={last ? editing ? t.preferences.save : O.finish : undefined} nextDisabled={last && !(charter && behavior)}>
       {step === 0 && <TextInput id="fam" label={Q.familyName} value={h.family_name ?? ""} onChange={(v) => set("family_name", v)} />}
       {step === 1 && (
         <>
           <TextInput id="spouse" label={Q.spouseName} value={h.spouse_first_name ?? ""} onChange={(v) => set("spouse_first_name", v)} />
-          <TextInput id="spouseId" label={Q.spouseId} dir="ltr" inputMode="numeric" value={h.spouse_id_number ?? ""} onChange={(v) => set("spouse_id_number", v.trim())} />
+          {!editing && <TextInput id="spouseId" label={Q.spouseId} dir="ltr" inputMode="numeric" value={h.spouse_id_number ?? ""} onChange={(v) => set("spouse_id_number", v.trim())} />}
         </>
       )}
       {step === 2 && (
         <>
-          <TextInput id="addr" label={Q.address} hint={Q.addressHint} value={h.street_address ?? ""} onChange={(v) => set("street_address", v)} />
+          <TextInput id="addr" label={Q.street} hint={Q.addressHint} value={h.street ?? ""} onChange={(v) => set("street", v)} />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextInput id="house-number" label={Q.houseNumber} value={h.house_number ?? ""} onChange={(v) => set("house_number", v)} />
+            <TextInput id="building-number" label={Q.buildingNumber} value={h.building_number ?? ""} onChange={(v) => set("building_number", v)} />
+          </div>
           <CitySelect id="hcity" label={Q.city} value={h.city ?? ""} onChange={(v) => set("city", v)} />
           <TextInput id="nb" label={Q.neighborhood} value={h.neighborhood ?? ""} onChange={(v) => set("neighborhood", v)} />
         </>
@@ -174,9 +179,16 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
       )}
       {step === 7 && (
         <>
+          <Choice label={Q.recommendation} value={h.recommendation_mode} options={[{ value: "recommenders", label: Q.twoRecommenders }, { value: "staff_call", label: Q.staffCall }]} onChange={(v) => set("recommendation_mode", v)} />
+          {h.recommendation_mode === "staff_call" ? <>
+            <Choice label={Q.callMethod} value={h.staff_call_method} options={Object.entries(Q.callMethods).map(([value,label]) => ({ value,label }))} onChange={(v) => set("staff_call_method", v)} />
+            <p className="text-muted-foreground">{Q.callNote}</p>
+          </> : <>
           <TextInput id="rn" label={Q.recName} value={h.recommender_name ?? ""} onChange={(v) => set("recommender_name", v)} />
-          <TextInput id="rr" label={Q.recRole} value={h.recommender_role ?? ""} onChange={(v) => set("recommender_role", v)} />
           <TextInput id="rp" label={Q.recPhone} type="tel" dir="ltr" value={h.recommender_phone ?? ""} onChange={(v) => set("recommender_phone", v)} />
+          <TextInput id="rn2" label={Q.secondRecName} value={h.recommender2_name ?? ""} onChange={(v) => set("recommender2_name", v)} />
+          <TextInput id="rp2" label={Q.secondRecPhone} type="tel" dir="ltr" value={h.recommender2_phone ?? ""} onChange={(v) => set("recommender2_phone", v)} />
+          </>}
         </>
       )}
       {step === 8 && (

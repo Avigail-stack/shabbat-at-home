@@ -5,6 +5,7 @@ import { PageShell } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
 import { meQuery } from "@/lib/me";
 import { t } from "@/i18n";
+import { WeeklyGuestDialog } from "@/components/onboarding/WeeklyGuestDialog";
 
 export const Route = createFileRoute("/_authenticated/home")({
   head: () => ({
@@ -53,6 +54,8 @@ function Home() {
     <PageShell>
       <h1 className="text-4xl font-bold text-primary">{H.hello(data.person.first_name ?? "")}</h1>
       <Button asChild variant="outline" className="mt-4"><Link to="/settings">{t.settings.link}</Link></Button>
+      <Button asChild variant="outline" className="mt-4 ms-2"><Link to="/preferences">{t.preferences.title}</Link></Button>
+      {active === "guest" && data.guest && <WeeklyGuestDialog profile={data.guest} />}
       {frozen && <p role="status" className="mt-4 rounded-xl bg-warning-bg p-4 font-semibold text-warning">{H.frozen}</p>}
 
       {hasGuest && hasHost && !side && (

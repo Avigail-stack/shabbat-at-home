@@ -9,6 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { t } from "@/i18n";
+import { useServerFn } from "@tanstack/react-start";
+import { useQueryClient } from "@tanstack/react-query";
+import { demoLogin } from "@/lib/demo-login.functions";
+import type { DemoSide } from "@/lib/demo-accounts";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -31,11 +35,26 @@ const creds = z.object({
 });
 
 function AuthPage() {
+  const loginDemo = useServerFn(demoLogin);
+  const qc = useQueryClient();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"tabs" | "forgot" | "checkEmail">("tabs");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+
+  async function demo(side: DemoSide) {
+    setBusy(true);
+    try {
+      const tokens = await loginDemo({ data: side });
+      await qc.cancelQueries(); qc.clear();
+      sessionStorage.removeItem("active-side");
+      const { error } = await supabase.auth.setSession(tokens);
+      if (error) throw error;
+      navigate({ to: side === "staff" ? "/admin" : "/home", replace: true });
+    } catch (error) { console.error(error instanceof Error ? error.message : "Demo login failed"); toast.error(t.demo.error); }
+    finally { setBusy(false); }
+  }
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -121,6 +140,9 @@ function AuthPage() {
           </form>
         ) : (
           <>
+            <div className="mb-5 grid gap-2">
+              {(["guest", "host", "staff"] as const).map((side) => <Button key={side} variant="outline" disabled={busy} onClick={() => demo(side)}>{t.demo[side]}</Button>)}
+            </div>
             <Button type="button" variant="outline" className="w-full" onClick={google}>{A.google}</Button>
             <div className="my-4 flex items-center gap-3 text-sm text-muted-foreground">
               <span className="h-px flex-1 bg-border" />{A.or}<span className="h-px flex-1 bg-border" />

@@ -3,6 +3,28 @@
 export const PHONE_RE = /^05\d{8}$/;
 export const OTP_RE = /^\d{6}$/;
 
+export type CompanionInput = { id_number: string; relation: string };
+export function validCompanions(companions: CompanionInput[], minors: number): boolean {
+  return Number.isInteger(minors) && minors >= 0 && companions.every((c) =>
+    (c.relation === "spouse" || c.relation === "child") && isValidIsraeliId(c.id_number)) &&
+    new Set(companions.map((c) => c.id_number.padStart(9, "0"))).size === companions.length;
+}
+
+export function validHostAddress(street: string | null, house: string | null, neighborhood: string | null, city: string | null): boolean {
+  return [street, house, neighborhood, city].every((v) => !!v?.trim());
+}
+export function validHostRecommendation(mode: string, method: string | null, names: (string | null)[], phones: (string | null)[]): boolean {
+  return mode === "staff_call" ? method === "video" || method === "phone" : mode === "recommenders" && names.length === 2 && phones.length === 2 && names.every((v) => !!v?.trim()) && phones.every((v) => PHONE_RE.test(v ?? ""));
+}
+
+export function guestWeekStart(date = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+  const get = (key: string) => parts.find((p) => p.type === key)?.value ?? "";
+  const day = new Date(`${get("year")}-${get("month")}-${get("day")}T12:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - day.getUTCDay());
+  return day.toISOString().slice(0,10);
+}
+
 export function isValidIsraeliId(id: string): boolean {
   if (!/^\d{5,9}$/.test(id)) return false;
   const p = id.padStart(9, "0");

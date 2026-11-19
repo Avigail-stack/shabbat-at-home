@@ -1,0 +1,1 @@
+INSERT INTO public.staff_invitations(email,role,status) VALUES('staff@demo.shabbat-babayit.example','rep','pending') ON CONFLICT DO NOTHING;

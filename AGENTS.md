@@ -35,7 +35,11 @@ use the editor.
 - Shared hosting-default controls are reused by questionnaires and weekly preferences so full-Shabbat lodging behavior stays consistent.
 - Legacy lodging-description and feedback-follow-up columns are compatibility-only and not used by the application; database triggers clear them on writes.
 - Every business rule is enforced twice: client mirror in `src/lib/validation.ts` and database triggers/functions (the database is authoritative).
+- Guest companions are saved atomically through an invoker database function; triggers validate relations/IDs and derive adult totals from companion rows while minors use a count.
 - Roles live only in `public.user_roles`; staff (rep/admin) have no `persons` row and get their role only after confirming an invited email (`staff_invitations`).
+- Public demo sign-in is restricted to fixed seeded user IDs/emails and exactly their expected roles; demo_staff is isolated from rep/admin privileges to protect existing accounts.
+- Demo session issuance uses fresh per-request privileged and token-verification clients so no shared client can inherit a demo session.
+- Preferences reuse questionnaire editing mode without identity/date-of-birth writes or status changes; weekly guest acknowledgements persist Sunday week-start dates in Israel time through an owner-only invoker function.
 - Guests never read `host_profiles` directly; staged reveal of address/phone goes through dedicated SECURITY DEFINER functions.
 - Requests/responses/hostings are written only through database functions (seat locking in one transaction), so users have read-only grants on them.
 - The connected Supabase project does not auto-expose tables: every new table needs explicit, minimal GRANTs plus RLS policies.

@@ -221,6 +221,41 @@ export type Database = {
         }
         Relationships: []
       }
+      companions: {
+        Row: {
+          created_at: string
+          guest_id: string
+          id: string
+          id_number: string
+          relation: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          guest_id: string
+          id?: string
+          id_number: string
+          relation: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          guest_id?: string
+          id?: string
+          id_number?: string
+          relation?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "companions_guest_id_fkey"
+            columns: ["guest_id"]
+            isOneToOne: false
+            referencedRelation: "guest_profiles"
+            referencedColumns: ["person_id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           answers: Json
@@ -348,12 +383,14 @@ export type Database = {
           default_with_lodging: boolean
           escort_name: string | null
           escort_phone: string | null
+          food_preferences: string | null
           food_sensitivities: string | null
           gender: Database["public"]["Enums"]["gender"] | null
           interests: string[]
           interests_other: string | null
           languages: string[]
           marital_status: string | null
+          minor_children_count: number
           onboarding_step: number
           party_adults: number
           party_children_ages: number[]
@@ -365,6 +402,7 @@ export type Database = {
             | null
           status: Database["public"]["Enums"]["profile_status"]
           updated_at: string
+          weekly_prompt_week: string | null
         }
         Insert: {
           about?: string | null
@@ -377,12 +415,14 @@ export type Database = {
           default_with_lodging?: boolean
           escort_name?: string | null
           escort_phone?: string | null
+          food_preferences?: string | null
           food_sensitivities?: string | null
           gender?: Database["public"]["Enums"]["gender"] | null
           interests?: string[]
           interests_other?: string | null
           languages?: string[]
           marital_status?: string | null
+          minor_children_count?: number
           onboarding_step?: number
           party_adults?: number
           party_children_ages?: number[]
@@ -394,6 +434,7 @@ export type Database = {
             | null
           status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
+          weekly_prompt_week?: string | null
         }
         Update: {
           about?: string | null
@@ -406,12 +447,14 @@ export type Database = {
           default_with_lodging?: boolean
           escort_name?: string | null
           escort_phone?: string | null
+          food_preferences?: string | null
           food_sensitivities?: string | null
           gender?: Database["public"]["Enums"]["gender"] | null
           interests?: string[]
           interests_other?: string | null
           languages?: string[]
           marital_status?: string | null
+          minor_children_count?: number
           onboarding_step?: number
           party_adults?: number
           party_children_ages?: number[]
@@ -423,6 +466,7 @@ export type Database = {
             | null
           status?: Database["public"]["Enums"]["profile_status"]
           updated_at?: string
+          weekly_prompt_week?: string | null
         }
         Relationships: [
           {
@@ -442,6 +486,7 @@ export type Database = {
           approval_by: string | null
           approval_note: string | null
           behavior_rules_accepted_at: string | null
+          building_number: string | null
           cannot_provide: string | null
           charter_accepted_at: string | null
           children_ages: number[]
@@ -456,6 +501,7 @@ export type Database = {
           food_offer: string | null
           guest_gender_pref: Database["public"]["Enums"]["guest_gender_pref"]
           house_character: string | null
+          house_number: string | null
           husband_age: number | null
           interests: string[]
           kashrut: string | null
@@ -465,16 +511,21 @@ export type Database = {
           onboarding_step: number
           person_id: string
           preferred_contact: Database["public"]["Enums"]["contact_method"]
+          recommendation_mode: string
           recommender_name: string | null
           recommender_phone: string | null
           recommender_role: string | null
+          recommender2_name: string | null
+          recommender2_phone: string | null
           rule_description_visible: boolean
           rule_lockable_door: boolean
           rule_no_shared_room: boolean
           rule_separate_room: boolean
           spouse_first_name: string | null
           spouse_id_number: string | null
+          staff_call_method: string | null
           status: Database["public"]["Enums"]["profile_status"]
+          street: string | null
           street_address: string | null
           updated_at: string
           wife_age: number | null
@@ -486,6 +537,7 @@ export type Database = {
           approval_by?: string | null
           approval_note?: string | null
           behavior_rules_accepted_at?: string | null
+          building_number?: string | null
           cannot_provide?: string | null
           charter_accepted_at?: string | null
           children_ages?: number[]
@@ -500,6 +552,7 @@ export type Database = {
           food_offer?: string | null
           guest_gender_pref?: Database["public"]["Enums"]["guest_gender_pref"]
           house_character?: string | null
+          house_number?: string | null
           husband_age?: number | null
           interests?: string[]
           kashrut?: string | null
@@ -509,16 +562,21 @@ export type Database = {
           onboarding_step?: number
           person_id: string
           preferred_contact?: Database["public"]["Enums"]["contact_method"]
+          recommendation_mode?: string
           recommender_name?: string | null
           recommender_phone?: string | null
           recommender_role?: string | null
+          recommender2_name?: string | null
+          recommender2_phone?: string | null
           rule_description_visible?: boolean
           rule_lockable_door?: boolean
           rule_no_shared_room?: boolean
           rule_separate_room?: boolean
           spouse_first_name?: string | null
           spouse_id_number?: string | null
+          staff_call_method?: string | null
           status?: Database["public"]["Enums"]["profile_status"]
+          street?: string | null
           street_address?: string | null
           updated_at?: string
           wife_age?: number | null
@@ -530,6 +588,7 @@ export type Database = {
           approval_by?: string | null
           approval_note?: string | null
           behavior_rules_accepted_at?: string | null
+          building_number?: string | null
           cannot_provide?: string | null
           charter_accepted_at?: string | null
           children_ages?: number[]
@@ -544,6 +603,7 @@ export type Database = {
           food_offer?: string | null
           guest_gender_pref?: Database["public"]["Enums"]["guest_gender_pref"]
           house_character?: string | null
+          house_number?: string | null
           husband_age?: number | null
           interests?: string[]
           kashrut?: string | null
@@ -553,16 +613,21 @@ export type Database = {
           onboarding_step?: number
           person_id?: string
           preferred_contact?: Database["public"]["Enums"]["contact_method"]
+          recommendation_mode?: string
           recommender_name?: string | null
           recommender_phone?: string | null
           recommender_role?: string | null
+          recommender2_name?: string | null
+          recommender2_phone?: string | null
           rule_description_visible?: boolean
           rule_lockable_door?: boolean
           rule_no_shared_room?: boolean
           rule_separate_room?: boolean
           spouse_first_name?: string | null
           spouse_id_number?: string | null
+          staff_call_method?: string | null
           status?: Database["public"]["Enums"]["profile_status"]
+          street?: string | null
           street_address?: string | null
           updated_at?: string
           wife_age?: number | null
@@ -1211,6 +1276,15 @@ export type Database = {
         Args: { _email: string; _user: string }
         Returns: undefined
       }
+      acknowledge_guest_week: {
+        Args: {
+          _food: string
+          _lodging: boolean
+          _sensitivities: string
+          _unit: Database["public"]["Enums"]["hosting_unit"]
+        }
+        Returns: undefined
+      }
       contains_contact_info: { Args: { t: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -1223,6 +1297,10 @@ export type Database = {
       is_valid_il_id: { Args: { id: string }; Returns: boolean }
       request_phone_code: {
         Args: { _method: string; _phone: string }
+        Returns: undefined
+      }
+      save_guest_companions: {
+        Args: { _companions: Json; _guest: string; _minors: number }
         Returns: undefined
       }
       verification_level: {
@@ -1238,7 +1316,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "guest" | "host" | "rep" | "admin"
+      app_role: "guest" | "host" | "rep" | "admin" | "demo_staff"
       availability_status: "open" | "full" | "cancelled"
       contact_method: "whatsapp" | "phone_call"
       gender: "male" | "female"
@@ -1410,7 +1488,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["guest", "host", "rep", "admin"],
+      app_role: ["guest", "host", "rep", "admin", "demo_staff"],
       availability_status: ["open", "full", "cancelled"],
       contact_method: ["whatsapp", "phone_call"],
       gender: ["male", "female"],
