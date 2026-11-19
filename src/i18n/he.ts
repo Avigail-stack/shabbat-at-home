@@ -342,7 +342,14 @@ export const he = {
     saved: "נשמר.",
     back: "חזרה לאזור האישי",
   },
-  admin: { title: "ניהול", soon: "אזור הצוות ייפתח בשלב הבא." },
+  admin: {
+    title: "ניהול – שבת בבית", description: "אזור הצוות: בדיקות, אישורים וטיפול במשתמשים.", login: "כניסת צוות", denied: "הכניסה לצוות היא בהזמנה בלבד.", code: "קוד כניסה מהאימייל", sendCode: "שליחת קוד לדוגמה", verifyCode: "כניסה לאזור הצוות", mockCode: "קוד לדוגמה: כל 6 ספרות יתקבלו.",
+    menu: { urgent: "התראות דחופות", hosts: "מארחים ממתינים לאישור", manual: "אימות ידני", hostings: "אירוחים", attention: "דורש תשומת לב", users: "כל המשתמשים" },
+    next: "הרשימה תיפתח במעבר הבא.", empty: "אין פריטים ברשימה.", name: "שם", city: "עיר", phone: "טלפון", date: "תאריך הרשמה", status: "מצב", level: "רמת אימות", actions: "פעולות", open: "פתיחת פרופיל", back: "חזרה לרשימה", search: "חיפוש לפי שם, טלפון או עיר", guests: "אורחים", hosts: "מארחים",
+    claim: "אני מטפל/ת", close: "סגירה", note: "סיבה / הערת טיפול (חובה)", save: "שמירת החלטה", saved: "ההחלטה נשמרה.", invalid: "יש למלא סיבה, להשלים את הבדיקות או לבחור תאריך עתידי.",
+    alertKinds: { flag: "דיווח על בעיה חמורה", stranded: "אורח נשאר בלי אירוח", exceptional: "ביטול חריג", blocked: "אדם חסום ניסה להירשם" }, sacred: "התקבל בשבת", statuses: { open: "פתוחה", handling: "בטיפול", closed: "סגורה", pending: "ממתין", approved: "מאושר", rejected: "נדחה", active: "פעיל", partial: "חלקי", none: "ללא הגבלה", frozen: "מוקפא", suspended: "מושעה", blocked: "חסום", passed: "עבר", failed: "נכשל", manual_review: "אימות ידני" },
+    approve: "אישור", reject_host: "דחייה עם סיבה", more_info: "בקשת פרטים נוספים", verify: "אומת ידנית", reject_identity: "דחיית אימות", freeze: "הקפאה", unfreeze: "הסרת הגבלה", suspend: "השעיה עד תאריך", until: "עד תאריך", idCheck: "ת״ז נבדקה", contactCheck: "ממליצים / שיחה נבדקו", videoNote: "לאחר שיחת וידאו", ownerNote: "בעל הבית חייב להשתתף", verification: "אימותים", profile: "פרופיל", history: "היסטוריה", messages: "הודעות", details: "פרטים", assigned: "הוקצה לטיפול", checklist: "רשימת בדיקות",
+  },
   notFound: "העמוד לא נמצא",
 } as const;
 

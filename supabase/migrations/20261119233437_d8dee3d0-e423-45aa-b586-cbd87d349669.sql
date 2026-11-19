@@ -1,0 +1,57 @@
+CREATE TABLE public.staff_sessions(user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,expires_at timestamptz NOT NULL,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now());
+GRANT ALL ON public.staff_sessions TO service_role;
+ALTER TABLE public.staff_sessions ENABLE ROW LEVEL SECURITY;
+CREATE TRIGGER staff_sessions_updated BEFORE UPDATE ON public.staff_sessions FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE TABLE public.staff_alert_handling(source text NOT NULL,source_id uuid NOT NULL,assigned_to uuid REFERENCES auth.users(id),status text NOT NULL DEFAULT 'open' CHECK(status IN('open','handling','closed')),closing_note text,created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(source,source_id),CHECK(status<>'closed' OR length(trim(closing_note))>0));
+GRANT ALL ON public.staff_alert_handling TO service_role;
+ALTER TABLE public.staff_alert_handling ENABLE ROW LEVEL SECURITY;
+CREATE TRIGGER staff_alert_updated BEFORE UPDATE ON public.staff_alert_handling FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+CREATE FUNCTION public.staff_access(_actor uuid) RETURNS boolean LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public AS $$ BEGIN
+IF _actor='2f79a37c-468f-4bf5-90c4-c0adef2190cc' AND public.has_role(_actor,'demo_staff') THEN RETURN true; END IF;
+IF NOT public.is_staff(_actor) OR NOT EXISTS(SELECT 1 FROM public.staff_sessions WHERE user_id=_actor AND expires_at>now()) THEN RAISE EXCEPTION 'staff_code_required'; END IF; RETURN false; END $$;
+REVOKE ALL ON FUNCTION public.staff_access(uuid) FROM PUBLIC,anon,authenticated; GRANT EXECUTE ON FUNCTION public.staff_access(uuid) TO service_role;
+CREATE FUNCTION public.staff_workspace(_actor uuid,_person uuid DEFAULT NULL) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE demo boolean; ids uuid[]; result jsonb; BEGIN
+demo:=public.staff_access(_actor); SELECT array_agg(id) INTO ids FROM public.persons WHERE NOT demo OR id IN('809f85d8-4640-4860-badc-45cba7b5fb4a','ed5895e3-934e-4220-91a1-f70cc937103c');
+IF _person IS NOT NULL AND NOT (_person=ANY(ids)) THEN RAISE EXCEPTION 'Forbidden'; END IF;
+WITH alerts AS (
+SELECT 'flag'::text source,f.id source_id,f.reported_person_id person_id,'flag'::text kind,f.description description,f.received_during_shabbat sacred,f.created_at FROM public.flags f WHERE f.reported_person_id=ANY(ids)
+UNION ALL SELECT 'hosting',h.id,h.guest_id,CASE WHEN h.exceptional_cancellation THEN 'exceptional' ELSE 'stranded' END,COALESCE(h.cancel_note,h.attention_alert),false,h.updated_at FROM public.hostings h WHERE h.attention_alert IS NOT NULL AND h.guest_id=ANY(ids) AND (NOT demo OR h.host_id=ANY(ids))
+UNION ALL SELECT 'blocked',b.id,b.person_id,'blocked',COALESCE(b.phone,b.id_number),false,b.created_at FROM public.blocked_identity_attempts b WHERE b.person_id=ANY(ids))
+SELECT jsonb_build_object('demo',demo,'role',CASE WHEN public.has_role(_actor,'admin') THEN 'admin' ELSE 'rep' END,'alerts',COALESCE((SELECT jsonb_agg(to_jsonb(a)||jsonb_build_object('status',COALESCE(s.status,'open'),'assigned_to',s.assigned_to,'closing_note',s.closing_note) ORDER BY a.created_at DESC) FROM alerts a LEFT JOIN public.staff_alert_handling s USING(source,source_id)),'[]'::jsonb),'people',COALESCE((SELECT jsonb_agg(jsonb_build_object('person',to_jsonb(p),'host',(SELECT to_jsonb(h) FROM public.host_profiles h WHERE h.person_id=p.id),'guest',(SELECT to_jsonb(g) FROM public.guest_profiles g WHERE g.person_id=p.id),'identity',(SELECT to_jsonb(i) FROM public.identity_checks i WHERE i.person_id=p.id),'level',public.verification_level(p.id,CASE WHEN EXISTS(SELECT 1 FROM public.host_profiles WHERE person_id=p.id) THEN 'host'::public.app_role ELSE 'guest'::public.app_role END))) FROM public.persons p WHERE p.id=ANY(ids)),'[]'::jsonb),'hosting_count',(SELECT count(*) FROM public.hostings WHERE guest_id=ANY(ids) AND (NOT demo OR host_id=ANY(ids))),'attention_count',(SELECT count(*) FROM public.audit_log WHERE action='feedback_attention' AND target_person_id=ANY(ids))) INTO result;
+IF _person IS NOT NULL THEN result:=result||jsonb_build_object('verifications',COALESCE((SELECT jsonb_agg(to_jsonb(v) ORDER BY created_at DESC) FROM public.verifications v WHERE person_id=_person),'[]'::jsonb),'history',COALESCE((SELECT jsonb_agg(jsonb_build_object('date',shabbat_date,'status',status,'id',id) ORDER BY shabbat_date DESC) FROM public.hostings WHERE _person IN(guest_id,host_id) AND (NOT demo OR (host_id=ANY(ids) AND guest_id=ANY(ids)))),'[]'::jsonb),'messages',COALESCE((SELECT jsonb_agg(jsonb_build_object('body',body,'created_at',created_at,'status',status)) FROM public.notifications WHERE person_id=_person AND channel='inbox'),'[]'::jsonb)); END IF; RETURN result; END $$;
+REVOKE ALL ON FUNCTION public.staff_workspace(uuid,uuid) FROM PUBLIC,anon,authenticated; GRANT EXECUTE ON FUNCTION public.staff_workspace(uuid,uuid) TO service_role;
+CREATE FUNCTION public.staff_review_action(_actor uuid,_action text,_target uuid,_note text,_until timestamptz DEFAULT NULL,_source text DEFAULT NULL,_id_check boolean DEFAULT false,_contact_check boolean DEFAULT false) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$ DECLARE demo boolean; target_person uuid; r public.app_role; p public.persons; BEGIN
+demo:=public.staff_access(_actor);
+IF _action NOT IN('claim','close','approve','reject_host','more_info','verify','reject_identity','freeze','unfreeze','suspend') THEN RAISE EXCEPTION 'Forbidden'; END IF;
+IF _action NOT IN('claim','approve') AND (COALESCE(length(trim(_note)),0)=0 OR length(_note)>2000) THEN RAISE EXCEPTION 'reason_required'; END IF;
+IF _action IN('claim','close') THEN
+IF _source='flag' THEN SELECT reported_person_id INTO target_person FROM public.flags WHERE id=_target;
+ELSIF _source='hosting' THEN SELECT guest_id INTO target_person FROM public.hostings WHERE id=_target AND (NOT demo OR host_id='ed5895e3-934e-4220-91a1-f70cc937103c');
+ELSIF _source='blocked' THEN SELECT person_id INTO target_person FROM public.blocked_identity_attempts WHERE id=_target; ELSE RAISE EXCEPTION 'Forbidden'; END IF;
+ELSE target_person:=_target; END IF;
+IF target_person IS NULL OR (demo AND target_person NOT IN('809f85d8-4640-4860-badc-45cba7b5fb4a','ed5895e3-934e-4220-91a1-f70cc937103c')) THEN RAISE EXCEPTION 'Forbidden'; END IF;
+SELECT * INTO p FROM public.persons WHERE id=target_person FOR UPDATE; IF p.id IS NULL THEN RAISE EXCEPTION 'Forbidden'; END IF;
+r:=CASE WHEN EXISTS(SELECT 1 FROM public.host_profiles WHERE person_id=p.id) THEN 'host'::public.app_role ELSE 'guest'::public.app_role END;
+IF _action IN('claim','close') THEN
+INSERT INTO public.staff_alert_handling(source,source_id,assigned_to,status,closing_note) VALUES(_source,_target,_actor,CASE WHEN _action='claim' THEN 'handling' ELSE 'closed' END,CASE WHEN _action='close' THEN trim(_note) END) ON CONFLICT(source,source_id) DO UPDATE SET assigned_to=_actor,status=EXCLUDED.status,closing_note=EXCLUDED.closing_note;
+IF _action='close' AND _source='flag' THEN UPDATE public.flags SET status='closed',handled_by=_actor,handled_at=now(),resolution=_note WHERE id=_target; ELSIF _action='close' AND _source='hosting' THEN UPDATE public.hostings SET attention_handled_at=now(),attention_handled_by=_actor WHERE id=_target; ELSIF _action='close' AND _source='blocked' THEN UPDATE public.blocked_identity_attempts SET handled_at=now() WHERE id=_target; END IF;
+ELSIF _action IN('approve','reject_host','more_info') THEN
+IF NOT EXISTS(SELECT 1 FROM public.host_profiles WHERE person_id=p.id) THEN RAISE EXCEPTION 'Forbidden'; END IF;
+IF _action='approve' AND (NOT _id_check OR NOT _contact_check OR NOT EXISTS(SELECT 1 FROM public.identity_checks WHERE person_id=p.id AND status='passed')) THEN RAISE EXCEPTION 'checklist_required'; END IF;
+UPDATE public.host_profiles SET approval=CASE WHEN _action='approve' THEN 'approved'::public.host_approval WHEN _action='reject_host' THEN 'rejected'::public.host_approval ELSE 'pending'::public.host_approval END,status=CASE WHEN _action='approve' THEN 'active'::public.profile_status WHEN _action='reject_host' THEN 'rejected'::public.profile_status ELSE 'pending'::public.profile_status END,approval_by=_actor,approval_at=now(),approval_note=_note WHERE person_id=p.id;
+INSERT INTO public.verifications(person_id,profile_role,kind,status,method,performed_by,performed_at,note) VALUES(p.id,'host','intro_call',CASE WHEN _action='approve' THEN 'passed'::public.verification_status WHEN _action='reject_host' THEN 'failed'::public.verification_status ELSE 'pending'::public.verification_status END,'staff_review',_actor,now(),_note);
+IF _action='approve' THEN INSERT INTO public.verifications(person_id,profile_role,kind,status,method,performed_by,performed_at,note) VALUES(p.id,'host','id','passed','staff_checklist',_actor,now(),_note); END IF;
+INSERT INTO public.notification_events(person_id,template,entity_id,event_key) VALUES(p.id,CASE WHEN _action='approve' THEN 'host_approved' WHEN _action='reject_host' THEN 'host_rejected' ELSE 'host_more_info' END,p.id,'staff-review:'||gen_random_uuid()::text);
+ELSIF _action IN('verify','reject_identity') THEN
+IF NOT EXISTS(SELECT 1 FROM public.identity_checks WHERE person_id=p.id AND attempts>=3 AND status='manual_review') THEN RAISE EXCEPTION 'manual_review_required'; END IF;
+UPDATE public.identity_checks SET status=CASE WHEN _action='verify' THEN 'passed' ELSE 'rejected' END WHERE person_id=p.id;
+INSERT INTO public.verifications(person_id,profile_role,kind,status,method,performed_by,performed_at,note) VALUES(p.id,r,'id',CASE WHEN _action='verify' THEN 'passed'::public.verification_status ELSE 'failed'::public.verification_status END,'manual_video_call',_actor,now(),_note);
+ELSIF _action IN('freeze','unfreeze','suspend') THEN
+IF p.restriction_status='blocked' THEN RAISE EXCEPTION 'Forbidden'; END IF;
+IF _action='suspend' AND (_until IS NULL OR _until<=now()) THEN RAISE EXCEPTION 'future_date_required'; END IF;
+UPDATE public.restrictions SET lifted_at=now(),lifted_by=_actor WHERE person_id=p.id AND lifted_at IS NULL AND kind IN('freeze','suspension');
+IF _action<>'unfreeze' THEN INSERT INTO public.restrictions(person_id,kind,reason,ends_at,decided_by) VALUES(p.id,CASE WHEN _action='freeze' THEN 'freeze'::public.restriction_kind ELSE 'suspension'::public.restriction_kind END,trim(_note),CASE WHEN _action='suspend' THEN _until END,_actor); END IF;
+UPDATE public.persons SET restriction_status=CASE WHEN _action='freeze' THEN 'frozen'::public.restriction_status WHEN _action='suspend' THEN 'suspended'::public.restriction_status ELSE 'none'::public.restriction_status END,restricted_until=CASE WHEN _action='suspend' THEN _until END WHERE id=p.id;
+END IF;
+INSERT INTO public.audit_log(actor_id,action,target_person_id,target_table,target_id,reason,details) VALUES(_actor,'staff_'||_action,p.id,COALESCE(_source,'persons'),_target::text,NULLIF(trim(_note),''),jsonb_build_object('until',_until,'id_checked',_id_check,'contact_checked',_contact_check,'demo',demo)); END $$;
+REVOKE ALL ON FUNCTION public.staff_review_action(uuid,text,uuid,text,timestamptz,text,boolean,boolean) FROM PUBLIC,anon,authenticated; GRANT EXECUTE ON FUNCTION public.staff_review_action(uuid,text,uuid,text,timestamptz,text,boolean,boolean) TO service_role;

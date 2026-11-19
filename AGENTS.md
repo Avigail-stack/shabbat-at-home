@@ -57,3 +57,4 @@ use the editor.
 - Feedback deadlines are server-computed from host-city havdalah; participant status exposes no answers, and database guards enforce feedback/freeze action locks.
 - Serious reports derive the reported person from the hosting participants; service-only atomic writes freeze the profile and record urgent staff attention.
 - Scheduled jobs are manually invoked through role-checked server functions; demo staff mutations are restricted to the fixed demo participants.
+- Staff review uses service-only transactional RPCs after authenticated role checks; a persisted mock-code session gates real staff, while fixed demo staff can only read/change fixed demo participants, preventing privilege escalation.

@@ -1,0 +1,12 @@
+DO $$ DECLARE def text; BEGIN SELECT pg_get_functiondef('public.capture_notification_event()'::regprocedure) INTO def; def:=replace(def, '||n->>''updated_at''','||(n->>''updated_at'')'); EXECUTE def; END $$;
+DO $$ DECLARE def text; BEGIN SELECT pg_get_functiondef('public.staff_review_action(uuid,text,uuid,text,timestamptz,text,boolean,boolean)'::regprocedure) INTO def; def:=replace(def,'INSERT INTO public.notification_events(person_id,template,entity_id,event_key) VALUES(p.id,CASE WHEN _action=''approve'' THEN ''host_approved'' WHEN _action=''reject_host'' THEN ''host_rejected'' ELSE ''host_more_info'' END,p.id,''staff-review:''||gen_random_uuid()::text);','IF _action=''more_info'' THEN INSERT INTO public.notification_events(person_id,template,entity_id,event_key) VALUES(p.id,''host_more_info'',p.id,''staff-review:''||gen_random_uuid()::text); END IF;'); EXECUTE def; END $$;
+DO $$ DECLARE demo uuid:='2f79a37c-468f-4bf5-90c4-c0adef2190cc'; host uuid:='ed5895e3-934e-4220-91a1-f70cc937103c'; alert uuid; before_count int; BEGIN
+SELECT id INTO alert FROM public.hostings WHERE guest_id='809f85d8-4640-4860-badc-45cba7b5fb4a' AND host_id=host AND attention_alert IS NOT NULL LIMIT 1;
+BEGIN PERFORM public.staff_review_action(demo,'close',alert,'',NULL,'hosting'); RAISE EXCEPTION 'close_note_test_failed'; EXCEPTION WHEN OTHERS THEN IF SQLERRM<>'reason_required' THEN RAISE; END IF; END;
+BEGIN
+PERFORM public.staff_review_action(demo,'close',alert,'Rollback alert closure',NULL,'hosting'); IF NOT EXISTS(SELECT 1 FROM public.staff_alert_handling WHERE source_id=alert AND status='closed' AND closing_note='Rollback alert closure') THEN RAISE EXCEPTION 'close_test_failed'; END IF;
+SELECT count(*) INTO before_count FROM public.notification_events WHERE person_id=host AND template='host_rejected';
+PERFORM public.staff_review_action(demo,'reject_host',host,'Rollback rejected'); IF (SELECT count(*) FROM public.notification_events WHERE person_id=host AND template='host_rejected')<>before_count+1 THEN RAISE EXCEPTION 'rejection_event_test_failed'; END IF;
+PERFORM public.staff_review_action(demo,'more_info',host,'Rollback information'); IF NOT EXISTS(SELECT 1 FROM public.notification_events WHERE person_id=host AND template='host_more_info') THEN RAISE EXCEPTION 'more_info_test_failed'; END IF;
+RAISE EXCEPTION 'rollback_success'; EXCEPTION WHEN OTHERS THEN IF SQLERRM<>'rollback_success' THEN RAISE; END IF; END;
+END $$;

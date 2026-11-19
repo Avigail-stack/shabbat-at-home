@@ -1,5 +1,13 @@
 # Roadmap — שבת בבית
 
+## Pass 3a
+- [x] Invite-only staff access and mock code; isolated demo representative
+- [x] Urgency menu, urgent alerts with claim/close notes
+- [x] Host approval and manual identity review queues
+- [x] Searchable guest/host tables, person details and audited restrictions
+- [x] 154 unit tests, transactional rollback checks and one short demo-staff browser check
+- [ ] Pass 3b: hostings/report, attention, message/Shabbat queue and mock havdalah job button — deferred as requested
+
 ## Pass 2e
 - [x] Atomic event outbox, mock-only channel delivery with Shabbat/holiday deferral, Friday reminders and staff-invoked jobs (button deferred to pass 3)
 - [x] Personal inbox and unread menu counter

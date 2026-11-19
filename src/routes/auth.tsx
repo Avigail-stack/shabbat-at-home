@@ -51,6 +51,11 @@ function AuthPage() {
   const [phoneReady, setPhoneReady] = useState(false);
 
   async function goHome() {
+    const { data: auth } = await supabase.auth.getUser();
+    if (auth.user) {
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", auth.user.id);
+      if (roles?.some(r => ["rep", "admin", "demo_staff"].includes(r.role))) { navigate({ to: "/admin", replace: true }); return; }
+    }
     try { await claim(); } catch { toast.error(t.onboarding.phone.expired); }
     navigate({ to: "/home", replace: true });
   }

@@ -1287,6 +1287,36 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_alert_handling: {
+        Row: {
+          assigned_to: string | null
+          closing_note: string | null
+          created_at: string
+          source: string
+          source_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          closing_note?: string | null
+          created_at?: string
+          source: string
+          source_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          closing_note?: string | null
+          created_at?: string
+          source?: string
+          source_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       staff_invitations: {
         Row: {
           accepted_at: string | null
@@ -1317,6 +1347,27 @@ export type Database = {
           role?: Database["public"]["Enums"]["app_role"]
           status?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      staff_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -1497,6 +1548,24 @@ export type Database = {
       save_guest_companions: {
         Args: { _companions: Json; _guest: string; _minors: number }
         Returns: undefined
+      }
+      staff_access: { Args: { _actor: string }; Returns: boolean }
+      staff_review_action: {
+        Args: {
+          _action: string
+          _actor: string
+          _contact_check?: boolean
+          _id_check?: boolean
+          _note: string
+          _source?: string
+          _target: string
+          _until?: string
+        }
+        Returns: undefined
+      }
+      staff_workspace: {
+        Args: { _actor: string; _person?: string }
+        Returns: Json
       }
       submit_hosting_feedback:
         | {

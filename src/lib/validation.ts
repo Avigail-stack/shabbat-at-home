@@ -1,4 +1,12 @@
 // Client-side mirrors of the database rules. The database enforces the same rules again.
+export function staffScopeAllowed(role: string, actor: string, target?: string) {
+  if (role === "rep" || role === "admin") return true;
+  return role === "demo_staff" && actor === "2f79a37c-468f-4bf5-90c4-c0adef2190cc" && (!target || ["809f85d8-4640-4860-badc-45cba7b5fb4a", "ed5895e3-934e-4220-91a1-f70cc937103c"].includes(target));
+}
+export function validStaffReview(action: string, note: string, until?: string, idCheck = false, contactCheck = false, now = new Date()) {
+  if (!["claim", "close", "approve", "reject_host", "more_info", "verify", "reject_identity", "freeze", "unfreeze", "suspend"].includes(action)) return false;
+  return note.length <= 2000 && (["claim", "approve"].includes(action) || note.trim().length > 0) && (action !== "approve" || (idCheck && contactCheck)) && (action !== "suspend" || (!!until && new Date(until) > now));
+}
 export function validFeedback(took: string, overall: string, details: string) { return ["yes", "partial", "no"].includes(took) && details.length <= 2000 && (took === "no" || (["מעולה", "נחמד", "לא טוב", "אחר"].includes(overall) && (!["לא טוב", "אחר"].includes(overall) || details.trim().length > 0))); }
 export function validFlag(description: string) { return description.trim().length > 0 && description.length <= 2000; }
 export function engagementActionsAllowed(frozen: boolean, feedback: { due: boolean; answered: boolean }[]) { return !frozen && !feedback.some((h) => h.due && !h.answered); }
