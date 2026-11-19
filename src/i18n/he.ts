@@ -1,6 +1,19 @@
 // All UI strings live here. More languages come later: add a sibling file with the same shape.
 export const he = {
   app: { name: "שבת בבית", tagline: "שבת אחת. בית אחד. בלי מסכים." },
+  demo: { banner: "אתר הדגמה – אין להזין פרטים אמיתיים" },
+  hostingDefaults: {
+    title: "מה מתאים בדרך כלל?",
+    full: "שבת שלמה",
+    meal: "סעודה בודדת",
+    mealChoice: "איזו סעודה?",
+    meals: { friday_dinner: "ליל שבת", shabbat_lunch: "יום שבת", seudah_shlishit: "סעודה שלישית" },
+    lodging: "עם לינה",
+    noLodging: "בלי לינה",
+    lodgingChoice: "לינה",
+    restRecommendation: "מומלץ להכין פינה או חדר שבו האורח יוכל לנוח",
+    commitment: "המשפחה התחייבה: חדר נפרד, דלת ננעלת",
+  },
   nav: { home: "דף הבית", help: "חומרי עזרה", login: "כניסה / הרשמה", personal: "האזור האישי", logout: "יציאה", staff: "כניסת צוות" },
   footer: {
     emergency: "במקרה חירום: משטרה 100 · מד״א 101",

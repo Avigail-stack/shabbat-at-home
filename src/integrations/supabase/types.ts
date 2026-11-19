@@ -344,6 +344,8 @@ export type Database = {
           charter_accepted_at: string | null
           city: string | null
           created_at: string
+          default_unit: Database["public"]["Enums"]["hosting_unit"]
+          default_with_lodging: boolean
           escort_name: string | null
           escort_phone: string | null
           food_sensitivities: string | null
@@ -371,6 +373,8 @@ export type Database = {
           charter_accepted_at?: string | null
           city?: string | null
           created_at?: string
+          default_unit?: Database["public"]["Enums"]["hosting_unit"]
+          default_with_lodging?: boolean
           escort_name?: string | null
           escort_phone?: string | null
           food_sensitivities?: string | null
@@ -398,6 +402,8 @@ export type Database = {
           charter_accepted_at?: string | null
           city?: string | null
           created_at?: string
+          default_unit?: Database["public"]["Enums"]["hosting_unit"]
+          default_with_lodging?: boolean
           escort_name?: string | null
           escort_phone?: string | null
           food_sensitivities?: string | null
@@ -443,6 +449,8 @@ export type Database = {
           created_at: string
           default_beds: number
           default_seats: number
+          default_unit: Database["public"]["Enums"]["hosting_unit"]
+          default_with_lodging: boolean
           family_composition: string | null
           family_name: string | null
           food_offer: string | null
@@ -485,6 +493,8 @@ export type Database = {
           created_at?: string
           default_beds?: number
           default_seats?: number
+          default_unit?: Database["public"]["Enums"]["hosting_unit"]
+          default_with_lodging?: boolean
           family_composition?: string | null
           family_name?: string | null
           food_offer?: string | null
@@ -527,6 +537,8 @@ export type Database = {
           created_at?: string
           default_beds?: number
           default_seats?: number
+          default_unit?: Database["public"]["Enums"]["hosting_unit"]
+          default_with_lodging?: boolean
           family_composition?: string | null
           family_name?: string | null
           food_offer?: string | null

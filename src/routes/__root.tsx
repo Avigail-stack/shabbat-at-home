@@ -122,7 +122,8 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        {children}
+        <div role="note" className="fixed inset-x-0 top-0 z-50 flex h-10 items-center justify-center bg-gold px-2 text-center text-sm font-semibold text-gold-foreground">{t.demo.banner}</div>
+        <div className="pt-10">{children}</div>
         <Scripts />
       </body>
     </html>

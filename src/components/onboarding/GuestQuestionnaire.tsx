@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { StepFrame } from "./StepFrame";
 import { Check, Chips, Choice, TextArea, TextInput } from "./fields";
 import { CitySelect } from "./CitySelect";
+import { HostingDefaults } from "./HostingDefaults";
 import { interestOptions, languageOptions, regionOptions } from "./options";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,7 @@ export function GuestQuestionnaire({ person, profile, onDone }: { person: Tables
       interests_other: g.interests_other, food_sensitivities: g.food_sensitivities,
       accessibility_needs: g.accessibility_needs, about: g.about,
       onboarding_step: last ? step : step + 1,
+      default_unit: g.default_unit, default_with_lodging: g.default_with_lodging,
     };
     if (last) {
       patch.charter_accepted_at = new Date().toISOString();
@@ -123,6 +125,7 @@ export function GuestQuestionnaire({ person, profile, onDone }: { person: Tables
       )}
       {step === 2 && (
         <>
+          <HostingDefaults value={{ unit: g.default_unit, withLodging: g.default_with_lodging }} onChange={(v) => setG((p) => ({ ...p, default_unit: v.unit, default_with_lodging: v.withLodging }))} />
           <Chips label={Q.languages} values={g.languages} options={languageOptions} onChange={(v) => set("languages", v)} />
           <Choice label={Q.familiarity} value={g.shabbat_familiarity} onChange={(v) => set("shabbat_familiarity", v)}
             options={(["never", "little", "well"] as const).map((f) => ({ value: f, label: Q.familiarities[f] }))} />

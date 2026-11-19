@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import { StepFrame } from "./StepFrame";
 import { Check, Chips, Choice, TextArea, TextInput } from "./fields";
 import { CitySelect } from "./CitySelect";
+import { HostingDefaults } from "./HostingDefaults";
 import { interestOptions, languageOptions } from "./options";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -48,9 +49,8 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
         if (!h.family_composition?.trim() || !h.husband_age || !h.wife_age) return O.required;
         return blocked(h.family_composition) ? O.contactBlocked : null;
       case 4:
-        if (!h.lodging_description?.trim() || rooms.some((r) => !r.name.trim())) return O.required;
-        return blocked(h.lodging_description) ? O.contactBlocked : null;
-      case 5: return h.rule_separate_room && h.rule_lockable_door && h.rule_description_visible && h.rule_no_shared_room ? null : O.required;
+        return h.default_with_lodging && rooms.some((r) => !r.name.trim()) ? O.required : null;
+      case 5: return !h.default_with_lodging || (h.rule_separate_room && h.rule_lockable_door) ? null : O.required;
       case 6: return h.languages.length ? null : O.required;
       case 7: return h.recommender_name?.trim() && h.recommender_role?.trim() && h.recommender_phone?.trim() ? null : O.required;
       case 8:
@@ -62,6 +62,7 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
           charterAccepted: charter, behaviorAccepted: behavior,
           lodgingRules: [h.rule_separate_room, h.rule_lockable_door, h.rule_description_visible, h.rule_no_shared_room],
           spouseName: h.spouse_first_name ?? "", spouseId: h.spouse_id_number ?? "",
+          withLodging: h.default_with_lodging,
         }) ? null : O.required;
     }
     return null;
@@ -71,8 +72,9 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
     const err = check();
     if (err) return void toast.error(err);
     setBusy(true);
-    if (step === 4) {
-      await supabase.from("host_rooms").delete().eq("host_id", person.id);
+    if (step === 4 && h.default_with_lodging) {
+      const { error: deleteError } = await supabase.from("host_rooms").delete().eq("host_id", person.id);
+      if (deleteError) { setBusy(false); return void toast.error(friendlyDbError(deleteError.message)); }
       const { error } = await supabase.from("host_rooms").insert(rooms.map((r) => ({ host_id: person.id, name: r.name.trim().slice(0, 60), beds: r.beds })));
       if (error) { setBusy(false); return void toast.error(friendlyDbError(error.message)); }
     }
@@ -80,7 +82,8 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
       family_name: h.family_name, spouse_first_name: h.spouse_first_name, spouse_id_number: h.spouse_id_number,
       street_address: h.street_address, city: h.city, neighborhood: h.neighborhood,
       family_composition: h.family_composition, husband_age: h.husband_age, wife_age: h.wife_age,
-      children_ages: parseAges(children), lodging_description: h.lodging_description,
+      children_ages: parseAges(children),
+      default_unit: h.default_unit, default_with_lodging: h.default_with_lodging,
       default_seats: h.default_seats, default_beds: h.default_beds,
       rule_separate_room: h.rule_separate_room, rule_lockable_door: h.rule_lockable_door,
       rule_description_visible: h.rule_description_visible, rule_no_shared_room: h.rule_no_shared_room,
@@ -135,6 +138,8 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
       )}
       {step === 4 && (
         <>
+          <HostingDefaults value={{ unit: h.default_unit, withLodging: h.default_with_lodging }} onChange={(v) => setH((p) => ({ ...p, default_unit: v.unit, default_with_lodging: v.withLodging }))} />
+          {h.default_with_lodging && <>
           <p className="text-base font-semibold">{Q.rooms}</p>
           {rooms.map((r, i) => (
             <div key={i} className="flex items-end gap-2">
@@ -144,20 +149,20 @@ export function HostQuestionnaire({ person, profile, onDone }: { person: Tables<
             </div>
           ))}
           <Button variant="outline" onClick={() => setRooms([...rooms, { name: "", beds: 1 }])}>{Q.addRoom}</Button>
-          <TextArea id="lodging" label={Q.lodgingDesc} value={h.lodging_description ?? ""} onChange={(v) => set("lodging_description", v)} />
+          </>}
           <div className="grid gap-4 sm:grid-cols-2">
             <TextInput id="seats" label={Q.seats} type="number" dir="ltr" value={String(h.default_seats)} onChange={(v) => set("default_seats", num(v, 30) ?? 0)} />
-            <TextInput id="dbeds" label={Q.defaultBeds} type="number" dir="ltr" value={String(h.default_beds)} onChange={(v) => set("default_beds", num(v, 30) ?? 0)} />
+            {h.default_with_lodging && <TextInput id="dbeds" label={Q.defaultBeds} type="number" dir="ltr" value={String(h.default_beds)} onChange={(v) => set("default_beds", num(v, 30) ?? 0)} />}
           </div>
         </>
       )}
       {step === 5 && (
         <>
+          {h.default_with_lodging ? <>
           <p>{Q.lodgingRulesIntro}</p>
           <Check id="r1" label={L[0]} checked={h.rule_separate_room} onChange={(v) => set("rule_separate_room", v)} />
           <Check id="r2" label={L[1]} checked={h.rule_lockable_door} onChange={(v) => set("rule_lockable_door", v)} />
-          <Check id="r3" label={L[2]} checked={h.rule_description_visible} onChange={(v) => set("rule_description_visible", v)} />
-          <Check id="r4" label={L[3]} checked={h.rule_no_shared_room} onChange={(v) => set("rule_no_shared_room", v)} />
+          </> : <p className="text-muted-foreground">{t.hostingDefaults.restRecommendation}</p>}
         </>
       )}
       {step === 6 && (

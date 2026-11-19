@@ -63,12 +63,16 @@ export type HostGate = {
   lodgingRules: [boolean, boolean, boolean, boolean];
   spouseName: string;
   spouseId: string;
+  withLodging?: boolean;
 };
+export function validHostingDefault(unit: string, withLodging: boolean): boolean {
+  return ["full_shabbat", "friday_dinner", "shabbat_lunch", "seudah_shlishit"].includes(unit) && (unit !== "full_shabbat" || withLodging);
+}
 export function canSubmitHost(h: HostGate): boolean {
   return (
     h.charterAccepted &&
     h.behaviorAccepted &&
-    h.lodgingRules.every(Boolean) &&
+    (h.withLodging === false || (h.lodgingRules[0] && h.lodgingRules[1])) &&
     h.spouseName.trim().length > 0 &&
     isValidIsraeliId(h.spouseId)
   );
