@@ -26,6 +26,7 @@ export const confirmResponse = createServerFn({ method: "POST" }).middleware([re
   .handler(async ({ data, context }) => {
     const result = await context.supabase.rpc("confirm_host_response", { _response: data.id, _contact: data.contact, _save_default: data.saveDefault });
     if (result.error) throw new Error(result.error.message);
+    const { refreshHostingDeadlines, processNotifications } = await import("./engagement.server"); await refreshHostingDeadlines(context.userId); await processNotifications();
     return result.data;
   });
 export const declineResponse = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
@@ -33,6 +34,7 @@ export const declineResponse = createServerFn({ method: "POST" }).middleware([re
   .handler(async ({ data, context }) => {
     const result = await context.supabase.rpc("decline_host_response", { _response: data.id, _reason: data.reason, _note: data.note });
     if (result.error) throw new Error(result.error.message);
+    const { processNotifications } = await import("./engagement.server"); await processNotifications();
   });
 export const cancelHosting = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid(), reason: z.enum(["illness", "bereavement", "plans_changed", "cannot_arrive", "other"]), note: z.string().max(2000) }).parse(input))
@@ -46,4 +48,5 @@ export const cancelHosting = createServerFn({ method: "POST" }).middleware([requ
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const cancelled = await supabaseAdmin.rpc("cancel_confirmed_hosting", { _id: data.id, _actor: context.userId, _reason: data.reason, _note: data.note, _candle: candle });
     if (cancelled.error) throw new Error(cancelled.error.message);
+    const { processNotifications } = await import("./engagement.server"); await processNotifications();
   });

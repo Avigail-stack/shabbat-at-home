@@ -5,6 +5,8 @@ import { rankInvitation, DEFAULT_WEIGHTS, type Invitation, type RankingWeights }
 import { z } from "zod";
 
 export const guestAreaData = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { refreshHostingDeadlines, processNotifications } = await import("./engagement.server");
+  await refreshHostingDeadlines(context.userId); await processNotifications();
   const db = context.supabase;
   const { error: expiryError } = await db.rpc("expire_my_responses");
   if (expiryError) throw new Error(expiryError.message);
@@ -27,6 +29,8 @@ export const guestAreaData = createServerFn({ method: "POST" }).middleware([requ
 });
 
 export const hostAreaData = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
+  const { refreshHostingDeadlines, processNotifications } = await import("./engagement.server");
+  await refreshHostingDeadlines(context.userId); await processNotifications();
   const db = context.supabase;
   await db.rpc("expire_my_responses");
   const [calendar, responses, dates, history] = await Promise.all([
@@ -41,18 +45,23 @@ export const hostAreaData = createServerFn({ method: "POST" }).middleware([requi
 export const addHostShabbat = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ date: z.string(), unit: z.enum(["full_shabbat", "friday_dinner", "shabbat_lunch", "seudah_shlishit"]), lodging: z.boolean(), seats: z.number().int().min(1), beds: z.number().int().min(0) }).parse(input))
   .handler(async ({ data, context }) => {
+    const { refreshHostingDeadlines } = await import("./engagement.server"); await refreshHostingDeadlines(context.userId);
     const { error } = await context.supabase.rpc("add_host_shabbat", { _date: data.date, _unit: data.unit, _lodging: data.lodging, _seats: data.seats, _beds: data.beds });
     if (error) throw new Error(error.message);
+    const { processNotifications } = await import("./engagement.server"); await processNotifications();
   });
 export const changeHostShabbat = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid(), action: z.enum(["cancel", "reopen", "delete"]) }).parse(input))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase.rpc("change_host_shabbat", { _id: data.id, _action: data.action });
     if (error) throw new Error(error.message);
+    const { processNotifications } = await import("./engagement.server"); await processNotifications();
   });
 export const sendGuestResponse = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid(), message: z.string().max(1000) }).parse(input))
   .handler(async ({ data, context }) => {
+    const { refreshHostingDeadlines } = await import("./engagement.server"); await refreshHostingDeadlines(context.userId);
     const { error } = await context.supabase.rpc("respond_to_invitation", { _availability: data.id, _message: data.message });
     if (error) throw new Error(error.message);
+    const { processNotifications } = await import("./engagement.server"); await processNotifications();
   });

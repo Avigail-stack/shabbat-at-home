@@ -1,5 +1,11 @@
 // All UI strings live here. More languages come later: add a sibling file with the same shape.
 export const he = {
+  messages: {
+    title: "ההודעות שלי", description: "תיבת ההודעות האישית בשבת בבית.", empty: "אין הודעות חדשות.", read: "סימון כנקרא", deferred: (channel: string) => `ההודעה תישלח אליך גם ב${channel} במוצאי שבת`, guestDeferred: "המשפחה תקבל את ההודעה במוצאי שבת",
+    templates: { new_response: "התקבלה היענות חדשה לשבת פרשת {parsha}. כל הפרטים באתר.", awaiting_you: "משפחת {family} מחכה לכם בקוצר רוח. {address}. טלפון: {phone}. דרך הקשר: {method}.", hosting_cancelled: "האירוח לשבת פרשת {parsha} בוטל. פרטים באתר.", answer_reminder: "ממתינים לתשובתכם להיענות לשבת.", host_approved: "הפרופיל שלכם אושר. ההזמנות גלויות לאורחים.", host_rejected: "הפרופיל לא אושר. אפשר לפנות לארגון לפרטים.", host_more_info: "הארגון מבקש פרטים נוספים.", response_declined: "המשפחה לא יכולה לארח הפעם", response_expired: "המשפחה לא הספיקה לענות הפעם", pre_shabbat_reminder: "משפחת {family} מחכה לכם בקוצר רוח. כניסת השבת ב{city}: {time}", feedback_form: "הגיע הזמן למשוב לארגון. המשוב גלוי לארגון בלבד." },
+  },
+  feedback: { title: "משוב לארגון", description: "משוב פרטי לארגון על האירוח בשבת בבית.", banner: "לפני השבת הבאה, יש להשלים משוב לארגון על האירוח הקודם.", private: "המשוב גלוי לארגון בלבד", took: "האירוח התקיים?", tookOptions: { yes: "כן", partial: "חלקית, עזבו באמצע", no: "לא" }, overall: "איך היה?", options: { excellent: "מעולה", nice: "נחמד, אבל אעדיף פעם אחרת סגנון אחר", bad: "לא טוב", other: "אחר" }, details: "פרטים", save: "שליחת משוב", saved: "המשוב התקבל. תודה.", notOpen: "המשוב ייפתח אחרי צאת השבת.", invalid: "יש לענות על השאלות ולהוסיף פרטים כשנדרש." },
+  flag: { title: "דיווח על בעיה חמורה", note: "במקרה חירום – 100. הצוות יטפל בדיווח במוצאי שבת.", description: "פרטי הבעיה", send: "שליחת דיווח", saved: "הדיווח התקבל. הפרופיל המדווח הוקפא לבדיקה.", invalid: "יש לתאר את הבעיה." },
   app: { name: "שבת בבית", tagline: "שבת אחת. בית אחד. בלי מסכים." },
   hostings: {
     title: "האירוח שלכם", description: "פרטי האירוח המאושר והתיאום בין האורחים למשפחה בשבת בבית.",

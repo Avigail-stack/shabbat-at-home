@@ -1,5 +1,12 @@
 # Roadmap — שבת בבית
 
+## Pass 2e
+- [x] Atomic event outbox, mock-only channel delivery with Shabbat/holiday deferral, Friday reminders and staff-invoked jobs (button deferred to pass 3)
+- [x] Personal inbox and unread menu counter
+- [x] Mandatory post-havdalah feedback, action locks and private staff attention records
+- [x] Serious reports, immediate profile freeze and urgent Shabbat marker (rollback-only database verification)
+- [x] Unit tests and final guest/host demo browser check (feedback unlock and host inbox; report dialog only)
+
 ## Pass 2d
 - [x] Transactional confirmation, seat lock, double-booking prevention and private contact reveal
 - [x] Guest/host hosting pages, candle-lighting, contact links and host reminders
@@ -33,11 +40,11 @@
 
 - [x] Pass 1: foundations, full database, public pages, sign-up + onboarding
 - [x] Pass 1: staff invitation for 6799027@gmail.com (admin) — email sent; staff login screen comes in pass 3
-- [ ] Pass 2: host and guest flows, notifications
+- [x] Pass 2: host and guest flows, notifications
   - [x] Email links (recovery/confirm/invite, hash + PKCE + token_hash, Hebrew expired-link error)
   - [x] Settings: channel, password, host contact method
   - [x] "ההעדפות שלי" (edit questionnaire answers)
   - [x] Host area tabs, guest area, confirmation/decline/cancellation
-  - [ ] Notifications/inbox, feedback + flag — deferred to next pass
+  - [x] Notifications/inbox, feedback + flag
 - [ ] Pass 3: admin area (staff login, queues, users, hostings, report, logs)
 - [ ] Pass 4: seed families/guests, tests, polish

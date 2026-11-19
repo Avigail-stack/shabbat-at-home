@@ -4,6 +4,11 @@ import { t } from "@/i18n";
 export function friendlyDbError(message: string | undefined): string {
   const m = message ?? "";
   const O = t.onboarding;
+  if (m.includes("feedback_required")) return t.feedback.banner;
+  if (m.includes("feedback_not_open")) return t.feedback.notOpen;
+  if (m.includes("feedback_invalid")) return t.feedback.invalid;
+  if (m.includes("profile_frozen")) return t.home.frozen;
+  if (m.includes("flag_invalid")) return t.flag.invalid;
   if (m.includes("double_booking")) return t.hostings.booked;
   if (m.includes("not_enough_seats")) return t.hostings.capacity;
   if (m.includes("reason_required")) return t.hostings.required;

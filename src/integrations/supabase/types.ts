@@ -318,6 +318,7 @@ export type Database = {
           handled_by: string | null
           hosting_id: string | null
           id: string
+          received_during_shabbat: boolean
           reported_person_id: string
           reporter_id: string
           resolution: string | null
@@ -330,6 +331,7 @@ export type Database = {
           handled_by?: string | null
           hosting_id?: string | null
           id?: string
+          received_during_shabbat?: boolean
           reported_person_id: string
           reporter_id: string
           resolution?: string | null
@@ -342,6 +344,7 @@ export type Database = {
           handled_by?: string | null
           hosting_id?: string | null
           id?: string
+          received_during_shabbat?: boolean
           reported_person_id?: string
           reporter_id?: string
           resolution?: string | null
@@ -689,6 +692,7 @@ export type Database = {
           contact_method: Database["public"]["Enums"]["contact_method"]
           created_at: string
           exceptional_cancellation: boolean
+          feedback_opens_at: string | null
           guest_id: string
           host_id: string
           id: string
@@ -714,6 +718,7 @@ export type Database = {
           contact_method: Database["public"]["Enums"]["contact_method"]
           created_at?: string
           exceptional_cancellation?: boolean
+          feedback_opens_at?: string | null
           guest_id: string
           host_id: string
           id?: string
@@ -739,6 +744,7 @@ export type Database = {
           contact_method?: Database["public"]["Enums"]["contact_method"]
           created_at?: string
           exceptional_cancellation?: boolean
+          feedback_opens_at?: string | null
           guest_id?: string
           host_id?: string
           id?: string
@@ -858,17 +864,60 @@ export type Database = {
           },
         ]
       }
+      notification_events: {
+        Row: {
+          created_at: string
+          entity_id: string | null
+          event_key: string
+          id: string
+          person_id: string
+          processed_at: string | null
+          template: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id?: string | null
+          event_key: string
+          id?: string
+          person_id: string
+          processed_at?: string | null
+          template: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string | null
+          event_key?: string
+          id?: string
+          person_id?: string
+          processed_at?: string | null
+          template?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_events_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           body: string | null
           channel: string
           created_at: string
+          event_key: string | null
           id: string
           important: boolean
           person_id: string | null
           provider: string
           read_at: string | null
           recipient: string | null
+          send_after: string | null
           sent_at: string | null
           status: string
           template: string
@@ -878,12 +927,14 @@ export type Database = {
           body?: string | null
           channel: string
           created_at?: string
+          event_key?: string | null
           id?: string
           important?: boolean
           person_id?: string | null
           provider?: string
           read_at?: string | null
           recipient?: string | null
+          send_after?: string | null
           sent_at?: string | null
           status?: string
           template: string
@@ -893,12 +944,14 @@ export type Database = {
           body?: string | null
           channel?: string
           created_at?: string
+          event_key?: string | null
           id?: string
           important?: boolean
           person_id?: string | null
           provider?: string
           read_at?: string | null
           recipient?: string | null
+          send_after?: string | null
           sent_at?: string | null
           status?: string
           template?: string
@@ -1401,6 +1454,10 @@ export type Database = {
         Returns: undefined
       }
       expire_my_responses: { Args: never; Returns: undefined }
+      feedback_pending: { Args: { _uid: string }; Returns: boolean }
+      feedback_state:
+        | { Args: never; Returns: Json }
+        | { Args: { _actor: string }; Returns: Json }
       guest_ready: { Args: { _uid: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -1420,6 +1477,15 @@ export type Database = {
       is_valid_il_id: { Args: { id: string }; Returns: boolean }
       list_guest_invitations: { Args: never; Returns: Json }
       my_hosting_summaries: { Args: never; Returns: Json }
+      report_hosting_problem: {
+        Args: {
+          _actor: string
+          _description: string
+          _id: string
+          _shabbat: boolean
+        }
+        Returns: string
+      }
       request_phone_code: {
         Args: { _method: string; _phone: string }
         Returns: undefined
@@ -1432,6 +1498,26 @@ export type Database = {
         Args: { _companions: Json; _guest: string; _minors: number }
         Returns: undefined
       }
+      submit_hosting_feedback:
+        | {
+            Args: {
+              _details: string
+              _id: string
+              _overall: string
+              _took: Database["public"]["Enums"]["took_place"]
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _actor: string
+              _details: string
+              _id: string
+              _overall: string
+              _took: Database["public"]["Enums"]["took_place"]
+            }
+            Returns: undefined
+          }
       submit_mock_identity: {
         Args: { _fail: boolean; _has_id_photo: boolean; _has_selfie: boolean }
         Returns: {

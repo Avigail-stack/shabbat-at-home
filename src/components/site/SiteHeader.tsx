@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { t } from "@/i18n";
 import { hostingSummaries } from "@/lib/hostings.functions";
+import { inboxData } from "@/lib/engagement.functions";
 import { HostingList } from "@/components/areas/HostingList";
 
 export function SiteHeader() {
@@ -13,6 +14,7 @@ export function SiteHeader() {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const summaries = useQuery({ queryKey: ["hostings"], queryFn: () => hostingSummaries(), enabled: !!user });
+  const inbox = useQuery({ queryKey: ["inbox"], queryFn: () => inboxData(), enabled: !!user, refetchInterval: 15000 });
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
@@ -30,6 +32,7 @@ export function SiteHeader() {
           </Button>
           {user ? (
             <>
+              <Button asChild variant="ghost" size="sm"><Link to="/inbox">{t.messages.title} {inbox.data?.filter((n) => !n.read_at).length || ""}</Link></Button>
               <Button asChild variant="ghost" size="sm">
                 <Link to="/home">{t.nav.personal}</Link>
               </Button>

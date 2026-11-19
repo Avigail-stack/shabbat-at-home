@@ -8,10 +8,11 @@ import { useEffect, useState } from "react";
 import { PageShell } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
 import { meQuery } from "@/lib/me";
-import { canViewInvitations } from "@/lib/validation";
+import { canViewInvitations, engagementActionsAllowed } from "@/lib/validation";
 import { t } from "@/i18n";
 import { WeeklyGuestDialog } from "@/components/onboarding/WeeklyGuestDialog";
 import { hostingSummaries } from "@/lib/hostings.functions";
+import { engagementState } from "@/lib/engagement.functions";
 import { HostingList } from "@/components/areas/HostingList";
 
 export const Route = createFileRoute("/_authenticated/home")({
@@ -34,12 +35,15 @@ type Side = "guest" | "host";
 function Home() {
   const H = t.home;
   const navigate = useNavigate();
-  const { data, isLoading } = useQuery(meQuery);
+  const { data, isLoading } = useQuery({ ...meQuery, refetchInterval: 15000 });
   const [side, setSide] = useState<Side | null>(null);
   const getGuest = useServerFn(guestAreaData); const getHost = useServerFn(hostAreaData);
   const ready = !!data?.person && canViewInvitations(data.person.onboarding_step, data.identity?.status);
+  const engagement = useQuery({ queryKey: ["engagement"], queryFn: () => engagementState(), enabled: ready, staleTime: 0, refetchInterval: 15000 });
+  const feedbackDue = engagement.data?.filter((h) => h.due && !h.answered) ?? [];
+  const actionsAllowed = !!engagement.data && engagementActionsAllowed(data?.person?.restriction_status !== "none", engagement.data);
   const summaries = useQuery({ queryKey: ["hostings"], queryFn: () => hostingSummaries(), enabled: ready });
-  const guestArea = useQuery({ queryKey: ["guest-area"], queryFn: () => getGuest(), enabled: ready && !!data?.guest && (!data.host || side === "guest") });
+  const guestArea = useQuery({ queryKey: ["guest-area"], queryFn: () => getGuest(), enabled: ready && actionsAllowed && !!data?.guest && (!data.host || side === "guest") });
   const hostArea = useQuery({ queryKey: ["host-area"], queryFn: () => getHost(), enabled: ready && !!data?.host && (!data.guest || side === "host") });
 
   useEffect(() => {
@@ -71,6 +75,7 @@ function Home() {
       {active === "guest" && data.guest && <WeeklyGuestDialog profile={data.guest} />}
       {frozen && <p role="status" className="mt-4 rounded-xl bg-warning-bg p-4 font-semibold text-warning">{H.frozen}</p>}
 
+      {feedbackDue.map((h) => <div key={h.id} className="mt-5 border-b border-border bg-warning-bg py-4 text-warning"><p>{t.feedback.banner}</p><Button asChild variant="link"><Link to="/feedback/$id" params={{ id: h.id }}>{t.feedback.title}</Link></Button></div>)}
       {hasGuest && hasHost && !side && (
         <div className="mt-6 rounded-2xl border border-border bg-card p-5">
           <h2 className="text-2xl font-bold text-primary">{H.chooseProfile}</h2>
@@ -87,9 +92,9 @@ function Home() {
       {active === "host" && data.host?.approval === "rejected" && (
         <p role="status" className="mt-6 rounded-xl bg-danger-bg p-4 font-semibold text-danger">{H.rejected}</p>
       )}
-      {active === "guest" && guestArea.data && <GuestArea data={guestArea.data} />}
+      {active === "guest" && actionsAllowed && guestArea.data && <GuestArea data={guestArea.data} />}
       {summaries.data && <HostingList items={summaries.data.filter((h) => h.side === active)} />}
-      {active === "host" && hostArea.data && data.host && <HostArea data={hostArea.data} profile={data.host} />}
+      {active === "host" && !frozen && hostArea.data && data.host && <HostArea data={hostArea.data} profile={data.host} publishingBlocked={!actionsAllowed} />}
       {(guestArea.error || hostArea.error) && <p role="alert" className="mt-6 text-danger">{t.auth.errors.generic}</p>}
     </PageShell>
   );

@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { ProblemReport } from "@/components/areas/ProblemReport";
+import { havdalah } from "@/lib/sacred-time";
 import { t } from "@/i18n";
 
 const options = (id: string) => queryOptions({ queryKey: ["hosting", id], queryFn: () => hostingDetail({ data: { id } }), staleTime: 0, refetchOnMount: "always", refetchInterval: 15000 });
@@ -43,14 +45,16 @@ function HostingPage() {
     } catch (e) { toast.error(friendlyDbError((e as Error).message)); } finally { setBusy(false); }
   }
   return <PageShell narrow><Button asChild variant="link" className="px-0"><Link to="/home">{t.settings.back}</Link></Button>
-    <h1 className="mt-4 text-3xl font-bold text-primary">{contactVisible(h.status) ? h.side === "guest" ? t.hostings.welcome(h.family_name) : t.hostArea.reminder(h.first_name, h.party_size - 1) : t.hostings.cancelled}</h1>
+    <h1 className="mt-4 text-3xl font-bold text-primary">{contactVisible(h.status) ? h.side === "guest" ? t.hostings.welcome(h.family_name) : t.hostArea.reminder(h.first_name, h.party_size - 1) : h.status.startsWith("cancelled") ? t.hostings.cancelled : t.hostArea.history}</h1>
     <p className="mt-3">{shabbatLabel(h.date, h.parsha)}</p>
+    {h.lat !== null && h.lng !== null && new Date() >= havdalah(h.date, { name: h.city, lat: h.lat, lng: h.lng }) && !h.status.startsWith("cancelled") && <Button asChild variant="outline" className="mt-4"><Link to="/feedback/$id" params={{ id }}>{t.feedback.title}</Link></Button>}
+    <ProblemReport id={id} />
     {contactVisible(h.status) ? <><p className="mt-3 font-semibold">{h.candle ? t.hostings.candles(h.city, candleTimeLabel(h.candle)) : t.hostings.noTime}</p>
       <dl className="mt-6 space-y-4"><div><dt className="font-bold">{t.hostings.address}</dt><dd>{h.address}</dd></div><div><dt className="font-bold">{t.hostings.phone}</dt><dd dir="ltr" className="text-start">{phone}</dd></div><div><dt className="font-bold">{t.hostings.coming}</dt><dd>{h.first_name} · {t.hostings.composition(h.adults, h.minors)}</dd></div><div><dt className="font-bold">{t.hostings.contact}</dt><dd>{t.hostQ.contacts[h.contact_method]}</dd></div></dl>
       {phone && <Button asChild size="lg" className="mt-6 w-full"><a href={contactLink} target={h.contact_method === "whatsapp" ? "_blank" : undefined} rel="noopener noreferrer">{h.contact_method === "whatsapp" ? <MessageCircle className="size-5" /> : <Phone className="size-5" />}{h.contact_method === "whatsapp" ? t.hostings.whatsapp : t.hostings.call}</a></Button>}
       {h.side === "guest" && h.contact_method === "phone_call" && <p className="mt-2 text-muted-foreground">{t.hostings.prefersCall}</p>}
       <p className="mt-6 border-t border-border pt-5 text-muted-foreground">{t.hostings.boundaries}</p><Button variant="outline" className="mt-6" disabled={!h.candle} onClick={() => setOpen(true)}>{t.hostings.cancel}</Button>
-    </> : <p role="status" className="mt-6">{h.side === "guest" && h.status === "cancelled_host" ? h.cancelled_on_friday ? t.hostings.fridayCancelled : t.hostings.hostCancelled : t.hostings.cancelled}</p>}
+    </> : <p role="status" className="mt-6">{h.side === "guest" && h.status === "cancelled_host" ? h.cancelled_on_friday ? t.hostings.fridayCancelled : t.hostings.hostCancelled : h.status.startsWith("cancelled") ? t.hostings.cancelled : t.hostArea.history}</p>}
     <Dialog open={open} onOpenChange={(value) => { if (!busy) setOpen(value); }}><DialogContent dir="rtl"><DialogHeader><DialogTitle>{t.hostings.cancel}</DialogTitle></DialogHeader>{exceptional && <p role="alert" className="bg-warning-bg p-3 text-warning">{t.hostings.lateWarning}</p>}<Label htmlFor="cancel-reason">{t.hostings.reason}</Label><Select value={reason} onValueChange={(value) => setReason(value as keyof typeof t.hostings.cancelReasons)}><SelectTrigger id="cancel-reason"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(t.hostings.cancelReasons).filter(([key]) => !exceptional || ["illness", "bereavement", "other"].includes(key)).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select><Label htmlFor="cancel-note">{t.hostings.note}{exceptional ? ` · ${t.onboarding.required}` : ""}</Label><Textarea id="cancel-note" maxLength={2000} value={note} onChange={(e) => setNote(e.target.value)} /><Button disabled={busy || !validCancellation(reason, note, exceptional)} onClick={submit}>{t.hostings.cancel}</Button></DialogContent></Dialog>
   </PageShell>;
 }

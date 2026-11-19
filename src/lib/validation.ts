@@ -1,4 +1,8 @@
 // Client-side mirrors of the database rules. The database enforces the same rules again.
+export function validFeedback(took: string, overall: string, details: string) { return ["yes", "partial", "no"].includes(took) && details.length <= 2000 && (took === "no" || (["מעולה", "נחמד", "לא טוב", "אחר"].includes(overall) && (!["לא טוב", "אחר"].includes(overall) || details.trim().length > 0))); }
+export function validFlag(description: string) { return description.trim().length > 0 && description.length <= 2000; }
+export function engagementActionsAllowed(frozen: boolean, feedback: { due: boolean; answered: boolean }[]) { return !frozen && !feedback.some((h) => h.due && !h.answered); }
+export function fridayReminderDue(shabbatDate: string, today: string, hour: number) { const friday = new Date(`${shabbatDate}T12:00:00Z`); friday.setUTCDate(friday.getUTCDate() - 1); return friday.toISOString().slice(0,10) === today && hour >= 9; }
 
 export function canConfirmHosting(pending: boolean, expires: string, seats: number, party: number, alreadyBooked: boolean, now = new Date()) {
   return pending && new Date(expires) > now && seats >= party && !alreadyBooked;

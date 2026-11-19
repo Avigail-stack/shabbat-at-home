@@ -52,3 +52,8 @@ use the editor.
 - Contact projections are participant-scoped and confirmed-only; decline reasons and cancellation attention fields have no ordinary-user column grants.
 - Cancellation candle times come from bundled Hebcal using city coordinates; only an authenticated, participant-authorized server handler may invoke the service-role-only timing write.
 - Response retries create separate historical requests; cancelled acceptances are joined by response ID so later bookings never overwrite their history.
+
+- Notification events are captured in the originating database transaction; idempotent mock receipts defer external channels through recipient-local sacred-time windows.
+- Feedback deadlines are server-computed from host-city havdalah; participant status exposes no answers, and database guards enforce feedback/freeze action locks.
+- Serious reports derive the reported person from the hosting participants; service-only atomic writes freeze the profile and record urgent staff attention.
+- Scheduled jobs are manually invoked through role-checked server functions; demo staff mutations are restricted to the fixed demo participants.

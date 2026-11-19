@@ -1,0 +1,2 @@
+DO $$ DECLARE def text; BEGIN SELECT pg_get_functiondef('public.capture_notification_event()'::regprocedure) INTO def;
+def:=replace(def,'NEW.approval','(to_jsonb(NEW)->>''approval'')');def:=replace(def,'OLD.approval','(to_jsonb(OLD)->>''approval'')'); def:=replace(def,'NEW.guest_id','((to_jsonb(NEW)->>''guest_id'')::uuid)');def:=replace(def,'NEW.host_id','((to_jsonb(NEW)->>''host_id'')::uuid)');def:=replace(def,'NEW.person_id','((to_jsonb(NEW)->>''person_id'')::uuid)'); EXECUTE def; END $$;
