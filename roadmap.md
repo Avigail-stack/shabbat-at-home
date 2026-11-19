@@ -1,5 +1,12 @@
 # Roadmap — שבת בבית
 
+## Pass 2b
+- [x] Phone before account, short-lived verified-phone proof, email/Google account linking
+- [x] Identity photo + selfie mock, three attempts and persistent manual-review waiting state
+- [x] Enforce phone → identity → details → role → questionnaire/charter; preserve demo access
+- [x] Unit tests; browser verified phone-first registration
+- [ ] Complete guest sign-up browser verification — blocked by Supabase email send rate limit; Google provider not configured
+
 ## Pass 2a — small, self-contained steps
 - [x] Fixed demo warning on every page
 - [x] Meals enabled; saved hosting-unit/lodging defaults in both questionnaires; conditional lodging commitments

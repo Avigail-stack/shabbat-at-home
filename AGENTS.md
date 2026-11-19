@@ -30,6 +30,8 @@ use the editor.
 <!-- LOVABLE:END -->
 
 ## Project rules
+- Pre-account phone verification uses a one-hour HttpOnly cookie backed by a hashed, single-use Supabase proof; authenticated claiming avoids exposing phone proof tokens to browser scripts.
+- Identity verification is account-wide before role selection; an owner-locked database action caps the portfolio mock at three attempts and persists manual-review state without storing photos.
 - All UI strings live in `src/i18n/he.ts` (accessed via `t` from `@/i18n`); more languages are added as sibling files.
 - External providers (OTP, notifications, identity verification) sit behind interfaces in `src/services/`; Phase 1 uses mocks so real providers plug in without touching screens.
 - Shared hosting-default controls are reused by questionnaires and weekly preferences so full-Shabbat lodging behavior stays consistent.

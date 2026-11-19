@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 import { PageShell } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
 import { PhoneStep, DetailsStep, RoleStep } from "@/components/onboarding/AccountSteps";
+import { IdentityStep } from "@/components/onboarding/IdentityStep";
+import { useServerFn } from "@tanstack/react-start";
+import { claimPhoneProof } from "@/lib/registration.functions";
 import { GuestQuestionnaire } from "@/components/onboarding/GuestQuestionnaire";
 import { HostQuestionnaire } from "@/components/onboarding/HostQuestionnaire";
 import { StepFrame } from "@/components/onboarding/StepFrame";
@@ -30,9 +33,16 @@ function Onboarding() {
   const navigate = useNavigate();
   const { data, isLoading } = useQuery(meQuery);
   const [finished, setFinished] = useState<null | "guest" | "host">(null);
+  const claim = useServerFn(claimPhoneProof);
+  const [claimed, setClaimed] = useState(false);
   const refresh = () => qc.invalidateQueries({ queryKey: ["me"] });
 
   const step = data?.person?.onboarding_step;
+  useEffect(() => {
+    if (claimed || step !== "phone") return;
+    setClaimed(true);
+    claim().then(async (ok) => { if (ok) await refresh(); }).catch(() => undefined);
+  }, [claimed, step, claim]);
   useEffect(() => {
     if (isLoading || finished) return;
     if (data && !data.person) navigate({ to: "/admin", replace: true }); // staff have no person record
@@ -56,6 +66,7 @@ function Onboarding() {
   return (
     <PageShell narrow>
       {p.onboarding_step === "phone" && <PhoneStep onDone={refresh} />}
+      {p.onboarding_step === "identity" && <IdentityStep personId={p.id} attempts={data.identity?.attempts ?? 0} status={data.identity?.status ?? "pending"} onDone={refresh} />}
       {p.onboarding_step === "details" && <DetailsStep person={p} onDone={refresh} />}
       {p.onboarding_step === "role" && <RoleStep person={p} onDone={refresh} />}
       {p.onboarding_step === "guest" && data.guest && (

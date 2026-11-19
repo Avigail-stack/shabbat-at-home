@@ -4,7 +4,7 @@ import { StepFrame } from "./StepFrame";
 import { Choice, TextInput } from "./fields";
 import { Button } from "@/components/ui/button";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { otpProvider, type OtpMethod } from "@/services/otp";
+import { otpProvider, type OtpMethod, type PhoneOtpProvider } from "@/services/otp";
 import { supabase } from "@/integrations/supabase/client";
 import { friendlyDbError } from "@/lib/db-errors";
 import { PHONE_RE, OTP_RE, isValidIsraeliId, containsContactInfo } from "@/lib/validation";
@@ -14,7 +14,7 @@ import { t } from "@/i18n";
 type Person = Tables<"persons">;
 const O = t.onboarding;
 
-export function PhoneStep({ onDone }: { onDone: () => void }) {
+export function PhoneStep({ onDone, provider = otpProvider }: { onDone: () => void; provider?: PhoneOtpProvider }) {
   const P = O.phone;
   const [phone, setPhone] = useState("");
   const [method, setMethod] = useState<OtpMethod | null>(null);
@@ -27,7 +27,7 @@ export function PhoneStep({ onDone }: { onDone: () => void }) {
     if (!PHONE_RE.test(clean)) return void toast.error(P.invalidPhone);
     setBusy(true);
     try {
-      await otpProvider.send(clean, m);
+      await provider.send(clean, m);
       setMethod(m);
       setSent(true);
       setCode("");
@@ -41,7 +41,7 @@ export function PhoneStep({ onDone }: { onDone: () => void }) {
     if (!OTP_RE.test(code)) return void toast.error(P.invalidCode);
     setBusy(true);
     try {
-      await otpProvider.verify(clean, code);
+      await provider.verify(clean, code);
       onDone();
     } catch (e) {
       toast.error(friendlyDbError((e as Error).message));

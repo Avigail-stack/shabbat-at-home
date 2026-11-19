@@ -776,6 +776,38 @@ export type Database = {
           },
         ]
       }
+      identity_checks: {
+        Row: {
+          attempts: number
+          created_at: string
+          person_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          person_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          person_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "identity_checks_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: true
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invite_links: {
         Row: {
           created_at: string
@@ -926,6 +958,36 @@ export type Database = {
           phone_verified_at?: string | null
           restricted_until?: string | null
           restriction_status?: Database["public"]["Enums"]["restriction_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      registration_phone_proofs: {
+        Row: {
+          consumed_by: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          phone: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          consumed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          consumed_by?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          phone?: string
+          token_hash?: string
           updated_at?: string
         }
         Relationships: []
@@ -1285,6 +1347,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      claim_registration_phone: {
+        Args: { _token_hash: string }
+        Returns: undefined
+      }
       contains_contact_info: { Args: { t: string }; Returns: boolean }
       has_role: {
         Args: {
@@ -1302,6 +1368,22 @@ export type Database = {
       save_guest_companions: {
         Args: { _companions: Json; _guest: string; _minors: number }
         Returns: undefined
+      }
+      submit_mock_identity: {
+        Args: { _fail: boolean; _has_id_photo: boolean; _has_selfie: boolean }
+        Returns: {
+          attempts: number
+          created_at: string
+          person_id: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "identity_checks"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       verification_level: {
         Args: {

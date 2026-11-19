@@ -9,6 +9,8 @@ export function friendlyDbError(message: string | undefined): string {
   if (m.includes("invalid_id_number") || m.includes("invalid_spouse_id")) return O.details.invalidId;
   if (m.includes("persons_id_number_key")) return O.details.idTaken;
   if (m.includes("phone_taken")) return O.phone.taken;
+  if (m.includes("phone_proof_expired")) return O.phone.expired;
+  if (m.includes("identity_photos_required")) return O.identity.photosRequired;
   if (m.includes("invalid_phone")) return O.phone.invalidPhone;
   if (m.includes("invalid_code")) return O.phone.invalidCode;
   if (m.includes("charter_required") || m.includes("lodging_rules_required")) return O.required;

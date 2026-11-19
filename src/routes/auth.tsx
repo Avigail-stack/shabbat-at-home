@@ -13,6 +13,8 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueryClient } from "@tanstack/react-query";
 import { demoLogin } from "@/lib/demo-login.functions";
 import type { DemoSide } from "@/lib/demo-accounts";
+import { PhoneStep } from "@/components/onboarding/AccountSteps";
+import { preAccountPhone, phoneProofState, claimPhoneProof } from "@/lib/registration.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -36,12 +38,22 @@ const creds = z.object({
 
 function AuthPage() {
   const loginDemo = useServerFn(demoLogin);
+  const phoneMock = useServerFn(preAccountPhone);
+  const proofState = useServerFn(phoneProofState);
+  const claim = useServerFn(claimPhoneProof);
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [mode, setMode] = useState<"tabs" | "forgot" | "checkEmail">("tabs");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [tab, setTab] = useState("login");
+  const [phoneReady, setPhoneReady] = useState(false);
+
+  async function goHome() {
+    try { await claim(); } catch { toast.error(t.onboarding.phone.expired); }
+    navigate({ to: "/home", replace: true });
+  }
 
   async function demo(side: DemoSide) {
     setBusy(true);
@@ -57,16 +69,18 @@ function AuthPage() {
   }
 
   useEffect(() => {
+    proofState().then(setPhoneReady);
     supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: "/home", replace: true });
+      if (data.user) void goHome();
     });
     const { data } = supabase.auth.onAuthStateChange((e, s) => {
-      if (e === "SIGNED_IN" && s) navigate({ to: "/home", replace: true });
+      if (e === "SIGNED_IN" && s) void goHome();
     });
     return () => data.subscription.unsubscribe();
   }, [navigate]);
 
   async function google() {
+    if (!(await proofState())) { setPhoneReady(false); setTab("signup"); return; }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: { redirectTo: `${window.location.origin}/auth` },
@@ -76,6 +90,7 @@ function AuthPage() {
 
   async function submit(e: FormEvent, kind: "login" | "signup") {
     e.preventDefault();
+    if (kind === "signup" && !(await proofState())) { setPhoneReady(false); return void toast.error(t.onboarding.phone.expired); }
     const parsed = creds.safeParse({ email, password });
     if (!parsed.success) return void toast.error(parsed.error.issues[0]?.message ?? A.errors.generic);
     setBusy(true);
@@ -86,7 +101,7 @@ function AuthPage() {
       } else {
         const { data, error } = await supabase.auth.signUp({
           ...parsed.data,
-          options: { emailRedirectTo: `${window.location.origin}/home` },
+           options: { emailRedirectTo: `${window.location.origin}/auth` },
         });
         if (error) toast.error(A.errors.generic);
         else if (!data.session) setMode("checkEmail");
@@ -143,11 +158,11 @@ function AuthPage() {
             <div className="mb-5 grid gap-2">
               {(["guest", "host", "staff"] as const).map((side) => <Button key={side} variant="outline" disabled={busy} onClick={() => demo(side)}>{t.demo[side]}</Button>)}
             </div>
-            <Button type="button" variant="outline" className="w-full" onClick={google}>{A.google}</Button>
+            {(tab !== "signup" || phoneReady) && <Button type="button" variant="outline" className="w-full" onClick={google}>{A.google}</Button>}
             <div className="my-4 flex items-center gap-3 text-sm text-muted-foreground">
               <span className="h-px flex-1 bg-border" />{A.or}<span className="h-px flex-1 bg-border" />
             </div>
-            <Tabs defaultValue="login">
+            <Tabs value={tab} onValueChange={setTab}>
               <TabsList className="grid h-11 w-full grid-cols-2">
                 <TabsTrigger value="login" className="min-h-9">{A.loginTab}</TabsTrigger>
                 <TabsTrigger value="signup" className="min-h-9">{A.signupTab}</TabsTrigger>
@@ -160,10 +175,13 @@ function AuthPage() {
                 </form>
               </TabsContent>
               <TabsContent value="signup">
-                <form onSubmit={(e) => submit(e, "signup")} className="space-y-4 pt-3">
+                {!phoneReady ? <PhoneStep provider={{
+                  send: async (phone, method) => { await phoneMock({ data: { phone, method } }); },
+                  verify: async (phone, code) => { await phoneMock({ data: { phone, method: "sms", code } }); },
+                }} onDone={() => setPhoneReady(true)} /> : <form onSubmit={(e) => submit(e, "signup")} className="space-y-4 pt-3">
                   {fields}
                   <Button type="submit" className="w-full" disabled={busy}>{A.signup}</Button>
-                </form>
+                </form>}
               </TabsContent>
             </Tabs>
           </>

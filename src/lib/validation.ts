@@ -3,6 +3,16 @@
 export const PHONE_RE = /^05\d{8}$/;
 export const OTP_RE = /^\d{6}$/;
 
+export const IDENTITY_MAX_ATTEMPTS = 3;
+export function identityAttempt(attempts: number, failed: boolean) {
+  if (attempts >= IDENTITY_MAX_ATTEMPTS) return { attempts: 3, status: "manual_review" } as const;
+  const next = Math.min(IDENTITY_MAX_ATTEMPTS, attempts + 1);
+  return { attempts: next, status: failed ? next >= 3 ? "manual_review" : "pending" : "passed" } as const;
+}
+export function canViewInvitations(step: string, identityStatus: string | undefined) {
+  return step === "done" && identityStatus === "passed";
+}
+
 export type CompanionInput = { id_number: string; relation: string };
 export function validCompanions(companions: CompanionInput[], minors: number): boolean {
   return Number.isInteger(minors) && minors >= 0 && companions.every((c) =>

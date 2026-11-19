@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PageShell } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
 import { meQuery } from "@/lib/me";
+import { canViewInvitations } from "@/lib/validation";
 import { t } from "@/i18n";
 import { WeeklyGuestDialog } from "@/components/onboarding/WeeklyGuestDialog";
 
@@ -33,7 +34,7 @@ function Home() {
   useEffect(() => {
     if (isLoading || !data) return;
     if (!data.person) navigate({ to: "/admin", replace: true });
-    else if (data.person.onboarding_step !== "done") navigate({ to: "/onboarding", replace: true });
+    else if (!canViewInvitations(data.person.onboarding_step, data.identity?.status)) navigate({ to: "/onboarding", replace: true });
   }, [data, isLoading, navigate]);
 
   useEffect(() => {
@@ -41,7 +42,7 @@ function Home() {
     if (saved === "guest" || saved === "host") setSide(saved);
   }, []);
 
-  if (isLoading || !data?.person || data.person.onboarding_step !== "done") {
+  if (isLoading || !data?.person || !canViewInvitations(data.person.onboarding_step, data.identity?.status)) {
     return <PageShell><p className="text-muted-foreground">…</p></PageShell>;
   }
   const hasGuest = !!data.guest && data.guest.status !== "partial";
