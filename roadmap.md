@@ -1,5 +1,12 @@
 # Roadmap — שבת בבית
 
+## Pass 2c
+- [x] Host tabs/calendar, add/cancel/reopen/delete, last-used type, no countdown, reminder slot
+- [x] Guest filters, safe invitation detail, response message/three limit/24h expiry
+- [x] Mandatory eligibility and weighted ranking; Thursday Israel-time cutoff (uncollected soft preferences neutral)
+- [x] Extend Shabbat dates and seed four demo invitations
+- [x] Unit tests and one final demo browser check
+
 ## Pass 2b
 - [x] Phone before account, short-lived verified-phone proof, email/Google account linking
 - [x] Identity photo + selfie mock, three attempts and persistent manual-review waiting state
@@ -12,7 +19,7 @@
 - [x] Meals enabled; saved hosting-unit/lodging defaults in both questionnaires; conditional lodging commitments
 - [x] Guest companions (adult ID + spouse/child relation; minor count; owner/staff access); remove groups from UI
 - [x] Host split address; two recommenders or staff video/phone call; remove lodging description
-- [ ] Lodging badge only on future guest invitation surfaces
+- [x] Lodging badge only on guest invitation surfaces
 - [x] Remove feedback follow-up consent usage (no feedback screen yet; compatibility column forced false)
 - [x] Three fictional demo accounts and quick sign-in buttons (demo staff isolated from rep/admin powers)
 - [x] Editable questionnaire preferences (exclude personal ID/date of birth)

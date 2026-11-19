@@ -1,0 +1,6 @@
+REVOKE ALL ON FUNCTION public.guest_ready(uuid),public.invitation_eligible(uuid,uuid),public.invitation_before_cutoff(date) FROM PUBLIC,anon,authenticated;
+COMMENT ON FUNCTION public.add_host_shabbat(date,public.hosting_unit,boolean,int,int) IS 'Intentionally authenticated owner action; validates completed host, dates and capacity. No caller-supplied owner.';
+COMMENT ON FUNCTION public.change_host_shabbat(uuid,text) IS 'Intentionally authenticated owner action; locks own availability and refuses changes to confirmed hostings.';
+COMMENT ON FUNCTION public.expire_my_responses() IS 'Intentionally authenticated owner action; only expires rows involving auth.uid().';
+COMMENT ON FUNCTION public.list_guest_invitations() IS 'Intentionally authenticated safe projection; completed identity-verified guests only; no private host contact or address columns.';
+COMMENT ON FUNCTION public.respond_to_invitation(uuid,text) IS 'Intentionally authenticated transactional owner action; locks own person, checks eligibility, caps pending responses at three, blocks contact info.';

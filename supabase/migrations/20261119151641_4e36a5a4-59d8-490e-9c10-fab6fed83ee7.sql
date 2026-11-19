@@ -1,0 +1,1 @@
+UPDATE public.availability SET seats=6,seats_left=6,beds=6 WHERE id='cccccccc-0000-4000-8000-000000000004' AND NOT EXISTS(SELECT 1 FROM public.hostings WHERE availability_id='cccccccc-0000-4000-8000-000000000004');

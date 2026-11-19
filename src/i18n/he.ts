@@ -1,6 +1,24 @@
 // All UI strings live here. More languages come later: add a sibling file with the same shape.
 export const he = {
   app: { name: "שבת בבית", tagline: "שבת אחת. בית אחד. בלי מסכים." },
+  invitations: {
+    title: "הזמנות פתוחות", detailTitle: "הזמנה לשבת", description: "הזמנות לשבת ממשפחות מאושרות המתאימות לך.",
+    shabbat: "שבת", type: "סוג אירוח", area: "אזור", all: "הכול", fullOrMeal: "שבת או סעודה", lodging: "לינה",
+    score: (n: number) => `${n} מתוך 100`, family: (n: string) => `משפחת ${n}`, seats: (n: number) => `${n} מקומות פנויים`,
+    open: "לפרטי ההזמנה", send: "אשמח להגיע", message: "הודעה אישית למשפחה", messageHint: "כמה מילים עליכם", sent: "ההיענות נשלחה למשפחה.",
+    waiting: "ממתינים לתשובת המשפחה", expired: "המשפחה לא הספיקה לענות הפעם", tracking: (n: number) => `${n} מתוך 3`,
+    responses: "ההיענויות שלי", empty: "אין כרגע הזמנות שמתאימות לבחירה שלך.", noResponses: "עדיין לא נשלחו היענויות.",
+    unavailable: "ההזמנה אינה זמינה כרגע.", limit: "אפשר להמתין לתשובה משלוש משפחות לכל היותר.", duplicate: "כבר נשלחה היענות להזמנה הזו.",
+    back: "חזרה להזמנות", about: "על המשפחה", food: "אוכל", character: "אופי הבית", cannot: "חשוב לדעת", languages: "שפות",
+    reasons: { near: "קרוב אליך", food: "התאמה בהעדפות האוכל", age: "גילים קרובים", interests: "תחומי עניין משותפים", feedback: "משוב חיובי מאורחים", languages: "יותר משפה משותפת אחת", language: "שפה משותפת" },
+  },
+  hostArea: {
+    responses: "היענויות", calendar: "לוח השבתות", history: "היסטוריה", add: "הוספת שבת", save: "שמירת שבת", cancel: "ביטול שבת", reopen: "פתיחה מחדש", remove: "מחיקת שבת",
+    seats: "מקומות בסעודה", beds: "מיטות", counter: (left: number, total: number) => `${left} מתוך ${total} מקומות פנויים`, full: "מלאה", cancelled: "מבוטלת", open: "פתוחה",
+    empty: "עדיין לא נוספו שבתות.", noResponses: "אין כרגע היענויות חדשות.", noHistory: "אין עדיין אירוחים קודמים.",
+    invalid: "יש לבחור שבת, מספר מקומות חיובי ומיטות כשיש לינה.", saved: "השבת נשמרה.", changed: "עודכן.", hasResponses: "לשבת הזו יש היענויות. אפשר לבטל, אך לא למחוק.", hasHosting: "יש אירוח מאושר בשבת הזו. הביטול ייפתח בשלב הבא.",
+    reminder: (name: string, n: number) => `השבת מגיעים אליכם: ${name} + ${n}`,
+  },
   demo: { banner: "אתר הדגמה – אין להזין פרטים אמיתיים", guest: "כניסה כאורח לדוגמה", host: "כניסה כמארח לדוגמה", staff: "כניסה כצוות לדוגמה", error: "הכניסה לדוגמה אינה זמינה כרגע. נסו שוב." },
   hostingDefaults: {
     title: "מה מתאים בדרך כלל?",

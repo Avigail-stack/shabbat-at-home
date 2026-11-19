@@ -1347,11 +1347,27 @@ export type Database = {
         }
         Returns: undefined
       }
+      add_host_shabbat: {
+        Args: {
+          _beds: number
+          _date: string
+          _lodging: boolean
+          _seats: number
+          _unit: Database["public"]["Enums"]["hosting_unit"]
+        }
+        Returns: string
+      }
+      change_host_shabbat: {
+        Args: { _action: string; _id: string }
+        Returns: undefined
+      }
       claim_registration_phone: {
         Args: { _token_hash: string }
         Returns: undefined
       }
       contains_contact_info: { Args: { t: string }; Returns: boolean }
+      expire_my_responses: { Args: never; Returns: undefined }
+      guest_ready: { Args: { _uid: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1359,11 +1375,22 @@ export type Database = {
         }
         Returns: boolean
       }
+      host_response_summaries: { Args: never; Returns: Json }
+      invitation_before_cutoff: { Args: { _date: string }; Returns: boolean }
+      invitation_eligible: {
+        Args: { _availability: string; _uid: string }
+        Returns: boolean
+      }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       is_valid_il_id: { Args: { id: string }; Returns: boolean }
+      list_guest_invitations: { Args: never; Returns: Json }
       request_phone_code: {
         Args: { _method: string; _phone: string }
         Returns: undefined
+      }
+      respond_to_invitation: {
+        Args: { _availability: string; _message: string }
+        Returns: string
       }
       save_guest_companions: {
         Args: { _companions: Json; _guest: string; _minors: number }

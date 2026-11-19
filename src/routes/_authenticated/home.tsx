@@ -1,5 +1,9 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { guestAreaData, hostAreaData } from "@/lib/areas.functions";
+import { HostArea } from "@/components/areas/HostArea";
+import { GuestArea } from "@/components/areas/GuestArea";
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/site/PageShell";
 import { Button } from "@/components/ui/button";
@@ -30,6 +34,10 @@ function Home() {
   const navigate = useNavigate();
   const { data, isLoading } = useQuery(meQuery);
   const [side, setSide] = useState<Side | null>(null);
+  const getGuest = useServerFn(guestAreaData); const getHost = useServerFn(hostAreaData);
+  const ready = !!data?.person && canViewInvitations(data.person.onboarding_step, data.identity?.status);
+  const guestArea = useQuery({ queryKey: ["guest-area"], queryFn: () => getGuest(), enabled: ready && !!data?.guest && (!data.host || side === "guest") });
+  const hostArea = useQuery({ queryKey: ["host-area"], queryFn: () => getHost(), enabled: ready && !!data?.host && (!data.guest || side === "host") });
 
   useEffect(() => {
     if (isLoading || !data) return;
@@ -75,12 +83,9 @@ function Home() {
       {active === "host" && data.host?.approval === "rejected" && (
         <p role="status" className="mt-6 rounded-xl bg-danger-bg p-4 font-semibold text-danger">{H.rejected}</p>
       )}
-      {active && (
-        <div className="mt-6 rounded-2xl border border-border bg-card p-5">
-          <h2 className="text-2xl font-bold text-primary">{H.title} · {active === "host" ? H.asHost : H.asGuest}</h2>
-          <p className="mt-2 text-muted-foreground">{H.comingSoon}</p>
-        </div>
-      )}
+      {active === "guest" && guestArea.data && <GuestArea data={guestArea.data} />}
+      {active === "host" && hostArea.data && data.host && <HostArea data={hostArea.data} profile={data.host} />}
+      {(guestArea.error || hostArea.error) && <p role="alert" className="mt-6 text-danger">{t.auth.errors.generic}</p>}
     </PageShell>
   );
 }

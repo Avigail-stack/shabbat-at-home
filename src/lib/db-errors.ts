@@ -4,6 +4,12 @@ import { t } from "@/i18n";
 export function friendlyDbError(message: string | undefined): string {
   const m = message ?? "";
   const O = t.onboarding;
+  if (m.includes("response_limit")) return t.invitations.limit;
+  if (m.includes("already_responded")) return t.invitations.duplicate;
+  if (m.includes("invitation_unavailable")) return t.invitations.unavailable;
+  if (m.includes("responses_exist")) return t.hostArea.hasResponses;
+  if (m.includes("hosting_exists")) return t.hostArea.hasHosting;
+  if (m.includes("invalid_capacity") || m.includes("invalid_shabbat")) return t.hostArea.invalid;
   if (m.includes("contact_info_not_allowed")) return O.contactBlocked;
   if (m.includes("guest_must_be_18")) return O.under18;
   if (m.includes("invalid_id_number") || m.includes("invalid_spouse_id")) return O.details.invalidId;

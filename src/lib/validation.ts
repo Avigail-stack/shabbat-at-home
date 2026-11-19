@@ -3,6 +3,32 @@
 export const PHONE_RE = /^05\d{8}$/;
 export const OTP_RE = /^\d{6}$/;
 
+export function invitationBeforeCutoff(date: string, now = new Date(), hour = 20): boolean {
+  const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Jerusalem", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const get = (key: string) => parts.find((p) => p.type === key)?.value ?? "";
+  const today = `${get("year")}-${get("month")}-${get("day")}`;
+  const cutoff = new Date(`${date}T12:00:00Z`); cutoff.setUTCDate(cutoff.getUTCDate() - 2);
+  const day = cutoff.toISOString().slice(0, 10);
+  return date > today && (today < day || (today === day && Number(get("hour")) < hour));
+}
+export function validAvailability(unit: string, lodging: boolean, seats: number, beds: number) {
+  return validHostingDefault(unit, lodging) && Number.isInteger(seats) && seats >= 1 && Number.isInteger(beds) && beds >= 0 && (!lodging || beds >= 1);
+}
+export function responseExpired(created: string, now = new Date()) { return now.getTime() - new Date(created).getTime() >= 24 * 60 * 60 * 1000; }
+export function canRespond(count: number) { return count < 3; }
+export type InvitationGate = {
+  approved: boolean; seats: number; beds: number; adults: number; minors: number;
+  genderPreference: string; gender: string; sharedLanguages: number;
+  areaAllowed: boolean; unit: string; guestUnit: string; lodging: boolean; guestLodging: boolean;
+  separateRoom: boolean; lockableDoor: boolean;
+};
+export function eligibleInvitation(g: InvitationGate) {
+  const size = g.adults + g.minors;
+  const gender = g.genderPreference === "everyone" || (g.genderPreference === "families_couples" && size > 1) ||
+    (g.adults === 1 && g.minors === 0 && ((g.genderPreference === "women_only" && g.gender === "female") || (g.genderPreference === "men_only" && g.gender === "male")));
+  return g.approved && size <= g.seats && (!g.lodging || size <= g.beds) && gender && g.sharedLanguages > 0 && g.areaAllowed && g.unit === g.guestUnit && g.lodging === g.guestLodging && (!g.lodging || (g.separateRoom && g.lockableDoor));
+}
+
 export const IDENTITY_MAX_ATTEMPTS = 3;
 export function identityAttempt(attempts: number, failed: boolean) {
   if (attempts >= IDENTITY_MAX_ATTEMPTS) return { attempts: 3, status: "manual_review" } as const;

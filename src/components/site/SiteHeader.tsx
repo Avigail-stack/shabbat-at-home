@@ -21,6 +21,7 @@ export function SiteHeader() {
       <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-3">
         <Logo />
         <nav className="flex items-center gap-1">
+          <span data-confirmed-reminder-slot="menu" />
           <Button asChild variant="ghost" size="sm">
             <Link to="/help">{t.nav.help}</Link>
           </Button>
