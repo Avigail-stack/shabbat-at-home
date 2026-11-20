@@ -38,8 +38,14 @@ function AboutPage() {
       <section className="mt-8 border-t border-border pt-6">
         <h2 className="text-2xl font-bold text-primary">{a.technology}</h2>
         <p className="mt-3 leading-relaxed">{a.stack}</p>
-        <span role="link" aria-disabled="true" className="mt-5 inline-block text-muted-foreground">{a.github}</span>
-        <p className="text-sm text-muted-foreground">{a.githubPending}</p>
+        <a
+          href="https://github.com/Avigail-stack/shabbat-at-home"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-5 inline-block text-primary underline underline-offset-4"
+        >
+          {a.github}
+        </a>
       </section>
     </article>
   </PageShell>;
