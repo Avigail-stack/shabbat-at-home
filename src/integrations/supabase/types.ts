@@ -256,6 +256,32 @@ export type Database = {
           },
         ]
       }
+      demo_participants: {
+        Row: {
+          created_at: string
+          person_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          person_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          person_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demo_participants_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: true
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           answers: Json

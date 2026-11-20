@@ -9,9 +9,9 @@ export function attentionDue(date: string) {
 }
 export function validAttentionAction(action: string, note: string, partial = false, result?: string, taken?: string) { return ["claim","called","note","close"].includes(action) && note.length <= 2000 && (!["note","close"].includes(action) || !!note.trim()) && (action !== "close" || !partial || (!!result && ["misunderstanding","charter","host_problem","other"].includes(result) && !!taken && ["none","remark","warning","suspension"].includes(taken))); }
 export function validStaffHostingAction(action: string, note: string) { return ["cancel","note"].includes(action) && !!note.trim() && note.length <= 2000; }
-export function staffScopeAllowed(role: string, actor: string, target?: string) {
+export function staffScopeAllowed(role: string, actor: string, target?: string, participants: readonly string[] = ["809f85d8-4640-4860-badc-45cba7b5fb4a", "ed5895e3-934e-4220-91a1-f70cc937103c"]) {
   if (role === "rep" || role === "admin") return true;
-  return role === "demo_staff" && actor === "2f79a37c-468f-4bf5-90c4-c0adef2190cc" && (!target || ["809f85d8-4640-4860-badc-45cba7b5fb4a", "ed5895e3-934e-4220-91a1-f70cc937103c"].includes(target));
+  return role === "demo_staff" && actor === "2f79a37c-468f-4bf5-90c4-c0adef2190cc" && (!target || participants.includes(target));
 }
 export function validStaffReview(action: string, note: string, until?: string, idCheck = false, contactCheck = false, now = new Date()) {
   if (!["claim", "close", "approve", "reject_host", "more_info", "verify", "reject_identity", "freeze", "unfreeze", "suspend"].includes(action)) return false;

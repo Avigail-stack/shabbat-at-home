@@ -1,5 +1,11 @@
 # Roadmap — שבת בבית
 
+## Pass 4
+- [x] Rebuildable fictional story: 8 approved hosts, 2 review cases, 8 guests, six invitation weeks, 3 confirmed and 6 past story visits, feedback, flag, cancellation and queued mock messages
+- [x] Extend demo staff scope only to explicitly seeded fictional participants; both hosting participants required
+- [x] Public Hebrew about page and footer link; GitHub link awaits user URL
+- [x] 181 unit tests, database fixture/isolation assertions and final short browser scenario: about, guest candles, staff report and expanded user profile (zero page errors)
+
 ## Pass 3a
 - [x] Invite-only staff access and mock code; isolated demo representative
 - [x] Urgency menu, urgent alerts with claim/close notes
@@ -59,4 +65,4 @@
   - [x] Host area tabs, guest area, confirmation/decline/cancellation
   - [x] Notifications/inbox, feedback + flag
 - [x] Pass 3: admin area (staff login, queues, users, hostings, report, logs)
-- [ ] Pass 4: seed families/guests, tests, polish
+- [x] Pass 4: seed families/guests, tests, about page

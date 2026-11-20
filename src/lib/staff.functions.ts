@@ -39,16 +39,22 @@ export const staffCode = createServerFn({ method: "POST" }).middleware([requireS
 export const staffWorkspace = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input) => z.object({person: z.string().uuid().optional()}).parse(input)).handler(async ({data,context}) => {
   setResponseHeader("Cache-Control", "no-store");
   const role = await roleFor(context.supabase, context.userId);
-  if (!staffScopeAllowed(role, context.userId, data.person)) throw new Error("Forbidden");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (role === "demo_staff" && data.person) {
+    const registry = await supabaseAdmin.from("demo_participants").select("person_id");
+    if (registry.error || !staffScopeAllowed(role, context.userId, data.person, (registry.data ?? []).map(p => p.person_id))) throw new Error("Forbidden");
+  }
   const result = await supabaseAdmin.rpc("staff_workspace", {_actor: context.userId, ...(data.person ? {_person: data.person} : {})});
   if (result.error) throw new Error(result.error.message); return result.data as unknown as Workspace;
 });
 export const staffAction = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input) => z.object({action: z.string(), target: z.string().uuid(), note: z.string().max(2000), until: z.string().datetime().optional(), source: z.enum(["flag","hosting","blocked"]).optional(), idCheck: z.boolean().default(false), contactCheck: z.boolean().default(false)}).parse(input)).handler(async ({data,context}) => {
   const role = await roleFor(context.supabase, context.userId);
   if (!validStaffReview(data.action,data.note,data.until,data.idCheck,data.contactCheck)) throw new Error("reason_required");
-  if (!data.source && !staffScopeAllowed(role,context.userId,data.target)) throw new Error("Forbidden");
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  if (role === "demo_staff" && !data.source) {
+    const registry = await supabaseAdmin.from("demo_participants").select("person_id");
+    if (registry.error || !staffScopeAllowed(role, context.userId, data.target, (registry.data ?? []).map(p => p.person_id))) throw new Error("Forbidden");
+  }
   const result = await supabaseAdmin.rpc("staff_review_action", {_actor: context.userId, _action: data.action, _target: data.target, _note: data.note, ...(data.until ? {_until:data.until} : {}), ...(data.source ? {_source:data.source} : {}), _id_check: data.idCheck, _contact_check: data.contactCheck});
   if (result.error) throw new Error(result.error.message);
   const {processNotifications} = await import("./engagement.server"); await processNotifications(new Date(), role === "demo_staff");

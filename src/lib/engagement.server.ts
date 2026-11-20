@@ -7,6 +7,10 @@ import { demoAccounts } from "./demo-accounts";
 import { fridayReminderDue } from "./validation";
 
 function check(result: { error: { message: string } | null }) { if (result.error) throw new Error(result.error.message); }
+async function demoParticipantIds() {
+  const result = await db.from("demo_participants").select("person_id"); check(result);
+  return (result.data ?? []).map(row => row.person_id);
+}
 export async function cityFor(uid: string) {
   const [host, guest] = await Promise.all([db.from("host_profiles").select("city").eq("person_id", uid).maybeSingle(), db.from("guest_profiles").select("city").eq("person_id", uid).maybeSingle()]);
   check(host); check(guest);
@@ -15,9 +19,10 @@ export async function cityFor(uid: string) {
   const result = await db.from("cities").select("name,lat,lng").eq("name", name).maybeSingle(); check(result);
   return result.data ?? FALLBACK_CITY;
 }
-export async function refreshHostingDeadlines(uid?: string) {
+export async function refreshHostingDeadlines(uid?: string, participants?: string[]) {
   let query = db.from("hostings").select("id,shabbat_date,host_id,feedback_opens_at").in("status", ["confirmed", "took_place", "did_not_take_place"]);
   if (uid) query = uid===demoAccounts.guest.id ? query.eq("host_id",demoAccounts.host.id).eq("guest_id",demoAccounts.guest.id) : query.or(`host_id.eq.${uid},guest_id.eq.${uid}`);
+  if (participants) query = query.in("host_id", participants).in("guest_id", participants);
   const result = await query; check(result);
   for (const h of result.data ?? []) {
     if (h.feedback_opens_at) continue;
@@ -50,7 +55,7 @@ async function variables(template: string, entity: string | null) {
 }
 export async function processNotifications(now = new Date(), demoOnly = false) {
   let pending = db.from("notification_events").select("*").is("processed_at", null).order("created_at").limit(1000);
-  if (demoOnly) pending = pending.in("person_id", [demoAccounts.guest.id, demoAccounts.host.id]);
+  if (demoOnly) pending = pending.in("person_id", await demoParticipantIds());
   const events = await pending; check(events);
   for (const event of events.data ?? []) {
     const person = await db.from("persons").select("email,phone,notification_channel").eq("id", event.person_id).single(); check(person);
@@ -72,12 +77,13 @@ export async function processNotifications(now = new Date(), demoOnly = false) {
   }
 }
 export async function runJobs(now: Date, demoOnly = false) {
-  if (demoOnly) await refreshHostingDeadlines(demoAccounts.guest.id); else await refreshHostingDeadlines();
+  const ids = demoOnly ? await demoParticipantIds() : [];
+  if (demoOnly) await refreshHostingDeadlines(undefined, ids); else await refreshHostingDeadlines();
   let expiry = db.from("responses").update({ status: "expired", answered_at: now.toISOString() }).eq("status", "pending").lte("expires_at", now.toISOString());
-  if (demoOnly) expiry = expiry.eq("guest_id", demoAccounts.guest.id).eq("host_id", demoAccounts.host.id);
+  if (demoOnly) expiry = expiry.in("guest_id", ids).in("host_id", ids);
   check(await expiry);
   let bookings = db.from("hostings").select("id,host_id,guest_id,shabbat_date,feedback_opens_at").in("status", ["confirmed", "took_place", "did_not_take_place"]);
-  if (demoOnly) bookings = bookings.eq("guest_id", demoAccounts.guest.id).eq("host_id", demoAccounts.host.id);
+  if (demoOnly) bookings = bookings.in("guest_id", ids).in("host_id", ids);
   const hostings = await bookings; check(hostings);
   const today = israelDate(now);
   for (const h of hostings.data ?? []) {
@@ -93,7 +99,7 @@ export async function runJobs(now: Date, demoOnly = false) {
   }
   await processNotifications(now, demoOnly);
   let queue = db.from("notifications").select("id,person_id,template,variables,event_key").eq("status", "queued").lte("send_after", now.toISOString()).limit(1000);
-  if (demoOnly) queue = queue.in("person_id", [demoAccounts.guest.id, demoAccounts.host.id]);
+  if (demoOnly) queue = queue.in("person_id", ids);
   const queued = await queue; check(queued);
   let released=0;
   for (const n of queued.data ?? []) {

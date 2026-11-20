@@ -1,0 +1,1 @@
+CREATE POLICY demo_registry_private ON public.demo_participants FOR ALL TO authenticated USING (false) WITH CHECK (false);
