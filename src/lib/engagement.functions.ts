@@ -1,8 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { validFeedback, validFlag } from "./validation";
-import { deferredUntil } from "./sacred-time";
+import { validFeedback, validFlag, staffScopeAllowed } from "./validation";
+import { deferredUntil, simulatedHavdalah } from "./sacred-time";
 
 export type FeedbackState = { id: string; date: string; side: "guest" | "host"; due: boolean; answered: boolean };
 export const engagementState = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).handler(async ({ context }) => {
@@ -36,12 +36,18 @@ export const reportProblem = createServerFn({ method: "POST" }).middleware([requ
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const result = await supabaseAdmin.rpc("report_hosting_problem", { _id: data.id, _actor: context.userId, _description: data.description, _shabbat: !!deferredUntil(new Date(), city) }); if (result.error) throw new Error(result.error.message);
 });
-export const runScheduledJobs = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input) => z.object({ now: z.string().datetime().optional() }).parse(input)).handler(async ({ data, context }) => {
+export const runScheduledJobs = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth]).inputValidator((input) => z.object({ now: z.string().datetime().optional(), simulate:z.boolean().default(false) }).parse(input)).handler(async ({ data, context }) => {
   const roles = await context.supabase.from("user_roles").select("role").eq("user_id", context.userId); if (roles.error) throw new Error(roles.error.message);
-  const demo = roles.data.some((r) => r.role === "demo_staff");
+  const demo = roles.data.some((r) => r.role === "demo_staff") && staffScopeAllowed("demo_staff",context.userId);
   const staff = roles.data.some((r) => r.role === "admin" || r.role === "rep");
   if (!staff && !demo) throw new Error("Forbidden");
   // A demo operator can release mock messages, but cannot advance time for real accounts.
   if (data.now && demo) throw new Error("Forbidden");
-  const { runJobs } = await import("./engagement.server"); return runJobs(data.now ? new Date(data.now) : new Date(), demo && !staff);
+  if(data.simulate && !demo)throw new Error("demo_only");
+  const {supabaseAdmin} = await import("@/integrations/supabase/client.server");
+  const access = await supabaseAdmin.rpc("staff_access",{_actor:context.userId}); if(access.error)throw new Error("Forbidden");
+  const now = data.simulate ? simulatedHavdalah(new Date()) : data.now ? new Date(data.now) : new Date();
+  const { runJobs } = await import("./engagement.server"); const result = await runJobs(now,demo && !staff);
+  const timed = await supabaseAdmin.rpc("staff_timed_rules",{_actor:context.userId,_now:now.toISOString(),_simulate:data.simulate}); if(timed.error)throw new Error(timed.error.message);
+  return {...result,opened:timed.data};
 });

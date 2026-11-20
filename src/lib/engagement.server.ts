@@ -17,7 +17,7 @@ export async function cityFor(uid: string) {
 }
 export async function refreshHostingDeadlines(uid?: string) {
   let query = db.from("hostings").select("id,shabbat_date,host_id,feedback_opens_at").in("status", ["confirmed", "took_place", "did_not_take_place"]);
-  if (uid) query = query.or(`host_id.eq.${uid},guest_id.eq.${uid}`);
+  if (uid) query = uid===demoAccounts.guest.id ? query.eq("host_id",demoAccounts.host.id).eq("guest_id",demoAccounts.guest.id) : query.or(`host_id.eq.${uid},guest_id.eq.${uid}`);
   const result = await query; check(result);
   for (const h of result.data ?? []) {
     if (h.feedback_opens_at) continue;
@@ -95,11 +95,12 @@ export async function runJobs(now: Date, demoOnly = false) {
   let queue = db.from("notifications").select("id,person_id,template,variables,event_key").eq("status", "queued").lte("send_after", now.toISOString()).limit(1000);
   if (demoOnly) queue = queue.in("person_id", [demoAccounts.guest.id, demoAccounts.host.id]);
   const queued = await queue; check(queued);
+  let released=0;
   for (const n of queued.data ?? []) {
     if (!n.person_id) continue;
     const after = deferredUntil(now, await cityFor(n.person_id));
     check(await db.from("notifications").update(after ? { send_after: after.toISOString() } : { status: "sent", sent_at: now.toISOString() }).eq("id", n.id).eq("status", "queued"));
+    if(!after)released++;
   }
-  return { processed: eventsCount(queued.data) };
+  return { processed: released };
 }
-function eventsCount(rows: unknown[] | null) { return rows?.length ?? 0; }

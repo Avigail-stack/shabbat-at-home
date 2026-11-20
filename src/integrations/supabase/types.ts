@@ -1317,6 +1317,84 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_attention: {
+        Row: {
+          action_taken: string | null
+          assigned_to: string | null
+          called_at: string | null
+          closed_at: string | null
+          created_at: string
+          due_at: string
+          event_key: string
+          hosting_id: string | null
+          id: string
+          kind: string
+          note: string | null
+          overdue: boolean
+          person_id: string
+          result: string | null
+          shabbat_date: string
+          status: string
+          strong: boolean
+          updated_at: string
+        }
+        Insert: {
+          action_taken?: string | null
+          assigned_to?: string | null
+          called_at?: string | null
+          closed_at?: string | null
+          created_at?: string
+          due_at: string
+          event_key: string
+          hosting_id?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          overdue?: boolean
+          person_id: string
+          result?: string | null
+          shabbat_date: string
+          status?: string
+          strong?: boolean
+          updated_at?: string
+        }
+        Update: {
+          action_taken?: string | null
+          assigned_to?: string | null
+          called_at?: string | null
+          closed_at?: string | null
+          created_at?: string
+          due_at?: string
+          event_key?: string
+          hosting_id?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          overdue?: boolean
+          person_id?: string
+          result?: string | null
+          shabbat_date?: string
+          status?: string
+          strong?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_attention_hosting_id_fkey"
+            columns: ["hosting_id"]
+            isOneToOne: false
+            referencedRelation: "hostings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_attention_person_id_fkey"
+            columns: ["person_id"]
+            isOneToOne: false
+            referencedRelation: "persons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_invitations: {
         Row: {
           accepted_at: string | null
@@ -1528,6 +1606,10 @@ export type Database = {
       is_valid_il_id: { Args: { id: string }; Returns: boolean }
       list_guest_invitations: { Args: never; Returns: Json }
       my_hosting_summaries: { Args: never; Returns: Json }
+      refresh_staff_attention: {
+        Args: { _actor: string; _now?: string }
+        Returns: undefined
+      }
       report_hosting_problem: {
         Args: {
           _actor: string
@@ -1550,6 +1632,22 @@ export type Database = {
         Returns: undefined
       }
       staff_access: { Args: { _actor: string }; Returns: boolean }
+      staff_attention_action: {
+        Args: {
+          _action: string
+          _actor: string
+          _id: string
+          _note?: string
+          _result?: string
+          _taken?: string
+        }
+        Returns: undefined
+      }
+      staff_hosting_action: {
+        Args: { _action: string; _actor: string; _id: string; _note: string }
+        Returns: undefined
+      }
+      staff_operations: { Args: { _actor: string }; Returns: Json }
       staff_review_action: {
         Args: {
           _action: string
@@ -1563,7 +1661,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      staff_timed_rules: {
+        Args: { _actor: string; _now: string; _simulate?: boolean }
+        Returns: number
+      }
       staff_workspace: {
+        Args: { _actor: string; _person?: string }
+        Returns: Json
+      }
+      staff_workspace_base: {
         Args: { _actor: string; _person?: string }
         Returns: Json
       }

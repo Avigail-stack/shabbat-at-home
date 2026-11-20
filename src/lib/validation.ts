@@ -1,4 +1,14 @@
 // Client-side mirrors of the database rules. The database enforces the same rules again.
+export const attentionThresholds = { late_hours: 72, late_count: 2, late_months: 3, decline_count: 3, unanswered_count: 4, response_months: 2, due_weekday: 2 };
+export function attentionThresholdReached(kind: "late" | "declined" | "unanswered", count: number, cfg = attentionThresholds) { return count >= (kind === "late" ? cfg.late_count : kind === "declined" ? cfg.decline_count : cfg.unanswered_count); }
+export function attentionDue(date: string) {
+  const d = new Date(`${date}T12:00:00Z`); d.setUTCDate(d.getUTCDate()+3);
+  const end = new Date(`${d.toISOString().slice(0,10)}T23:59:59.999Z`);
+  const hour = Number(new Intl.DateTimeFormat("en",{timeZone:"Asia/Jerusalem",hour:"numeric",hourCycle:"h23"}).format(d));
+  return new Date(end.getTime()-(hour-12)*3600000);
+}
+export function validAttentionAction(action: string, note: string, partial = false, result?: string, taken?: string) { return ["claim","called","note","close"].includes(action) && note.length <= 2000 && (!["note","close"].includes(action) || !!note.trim()) && (action !== "close" || !partial || (!!result && ["misunderstanding","charter","host_problem","other"].includes(result) && !!taken && ["none","remark","warning","suspension"].includes(taken))); }
+export function validStaffHostingAction(action: string, note: string) { return ["cancel","note"].includes(action) && !!note.trim() && note.length <= 2000; }
 export function staffScopeAllowed(role: string, actor: string, target?: string) {
   if (role === "rep" || role === "admin") return true;
   return role === "demo_staff" && actor === "2f79a37c-468f-4bf5-90c4-c0adef2190cc" && (!target || ["809f85d8-4640-4860-badc-45cba7b5fb4a", "ed5895e3-934e-4220-91a1-f70cc937103c"].includes(target));

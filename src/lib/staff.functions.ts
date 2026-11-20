@@ -2,7 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeader } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { staffScopeAllowed, validStaffReview, OTP_RE } from "./validation";
+import { staffScopeAllowed, validStaffReview, validAttentionAction, validStaffHostingAction, OTP_RE } from "./validation";
+import type { ReportHosting } from "./staff-report";
 import type { Database } from "@/integrations/supabase/types";
 type Row<K extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][K]["Row"];
 export type StaffPerson = { person: Row<"persons">; host: Row<"host_profiles"> | null; guest: Row<"guest_profiles"> | null; identity: Row<"identity_checks"> | null; level: number };
@@ -51,4 +52,18 @@ export const staffAction = createServerFn({ method: "POST" }).middleware([requir
   const result = await supabaseAdmin.rpc("staff_review_action", {_actor: context.userId, _action: data.action, _target: data.target, _note: data.note, ...(data.until ? {_until:data.until} : {}), ...(data.source ? {_source:data.source} : {}), _id_check: data.idCheck, _contact_check: data.contactCheck});
   if (result.error) throw new Error(result.error.message);
   const {processNotifications} = await import("./engagement.server"); await processNotifications(new Date(), role === "demo_staff");
+});
+export type AttentionItem = Row<"staff_attention">;
+export type Operations = { hostings: ReportHosting[]; attention: AttentionItem[]; notifications: Row<"notifications">[] };
+export const staffOperations = createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).handler(async ({context})=>{
+  setResponseHeader("Cache-Control","no-store"); await roleFor(context.supabase,context.userId);
+  const {supabaseAdmin} = await import("@/integrations/supabase/client.server");
+  const r = await supabaseAdmin.rpc("staff_operations",{_actor:context.userId}); if(r.error)throw new Error(r.error.message); return r.data as unknown as Operations;
+});
+export const staffOperationAction = createServerFn({method:"POST"}).middleware([requireSupabaseAuth]).inputValidator(input=>z.object({kind:z.enum(["hosting","attention"]),id:z.string().uuid(),action:z.string(),note:z.string().max(2000),partial:z.boolean().default(false),result:z.string().optional(),taken:z.string().optional()}).parse(input)).handler(async({data,context})=>{
+  const role = await roleFor(context.supabase,context.userId);
+  if(data.kind==="hosting" ? !validStaffHostingAction(data.action,data.note) : !validAttentionAction(data.action,data.note,data.partial,data.result,data.taken))throw new Error("reason_required");
+  const {supabaseAdmin} = await import("@/integrations/supabase/client.server");
+  const r = data.kind==="hosting" ? await supabaseAdmin.rpc("staff_hosting_action",{_actor:context.userId,_id:data.id,_action:data.action,_note:data.note}) : await supabaseAdmin.rpc("staff_attention_action",{_actor:context.userId,_id:data.id,_action:data.action,_note:data.note,...(data.result?{_result:data.result}:{}),...(data.taken?{_taken:data.taken}:{})});
+  if(r.error)throw new Error(r.error.message); const {processNotifications}=await import("./engagement.server"); await processNotifications(new Date(),role==="demo_staff");
 });

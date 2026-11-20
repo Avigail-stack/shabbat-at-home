@@ -13,6 +13,8 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { staffWorkspace, staffAction, type StaffPerson } from "@/lib/staff.functions";
 import { validStaffReview } from "@/lib/validation";
 import { t } from "@/i18n";
+import { StaffOperations } from "./StaffOperations";
+import { runScheduledJobs } from "@/lib/engagement.functions";
 const A = t.admin;
 type Section = keyof typeof A.menu;
 type Action = {action: string; target: string; source?: "flag"|"hosting"|"blocked" | undefined};
@@ -26,6 +28,8 @@ export function StaffArea() {
   const [action,setAction] = useState<Action>(); const [note,setNote] = useState(""); const [until,setUntil] = useState("");
   const [idCheck,setIdCheck] = useState(false); const [contactCheck,setContactCheck] = useState(false); const [busy,setBusy] = useState(false);
   const fetch = useServerFn(staffWorkspace); const mutate = useServerFn(staffAction); const qc = useQueryClient();
+  const jobs = useServerFn(runScheduledJobs);
+  const [jobBusy,setJobBusy]=useState(false); const [jobResult,setJobResult]=useState("");
   const query = useQuery({queryKey:["staff-workspace",person],queryFn:()=>fetch({data:{person}}),staleTime:0});
   const data = query.data;
   function choose(a: Action) { setAction(a); setNote(""); setUntil(""); setIdCheck(false); setContactCheck(false); }
@@ -34,14 +38,14 @@ export function StaffArea() {
     const iso = until ? new Date(`${until}T23:59:59+02:00`).toISOString() : undefined;
     if (!validStaffReview(action.action,note,iso,idCheck,contactCheck)) return void toast.error(A.invalid);
     setBusy(true);
-    try { await mutate({data:{...action,note,until:iso,idCheck,contactCheck}}); setAction(undefined); await qc.invalidateQueries({queryKey:["staff-workspace"]}); toast.success(A.saved); }
+    try { await mutate({data:{...action,note,until:iso,idCheck,contactCheck}}); setAction(undefined); await Promise.all([qc.invalidateQueries({queryKey:["staff-workspace"]}),qc.invalidateQueries({queryKey:["staff-operations"]})]); toast.success(A.saved); }
     catch { toast.error(t.auth.errors.generic); } finally { setBusy(false); }
   }
   if (query.error) return <p role="alert" className="text-danger">{A.denied}</p>;
   if (!data) return <p aria-busy="true">…</p>;
   const hosts = data.people.filter(p=>p.host?.approval==="pending" && p.host.status!=="partial");
   const manual = data.people.filter(p=>p.identity?.status==="manual_review" && p.identity.attempts>=3);
-  const counts: Record<Section,number> = {urgent:data.alerts.filter(a=>a.status!=="closed").length,hosts:hosts.length,manual:manual.length,hostings:data.hosting_count,attention:data.attention_count,users:data.people.length};
+  const counts: Partial<Record<Section,number>> = {urgent:data.alerts.filter(a=>a.status!=="closed").length,hosts:hosts.length,manual:manual.length,hostings:data.hosting_count,attention:data.attention_count,users:data.people.length};
   const selected = data.people.find(p=>p.person.id===person);
   const shown = (section==="hosts"?hosts:section==="manual"?manual:data.people.filter(p=>tab==="host"?!!p.host:!!p.guest)).filter(p=>[name(p),p.person.phone,p.host?.city,p.guest?.city].join(" ").toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   const labels: Record<string,string> = {approve:A.approve,reject_host:A.reject_host,more_info:A.more_info,verify:A.verify,reject_identity:A.reject_identity,freeze:A.freeze,unfreeze:A.unfreeze,suspend:A.suspend,close:A.close,claim:A.claim};
@@ -55,6 +59,7 @@ export function StaffArea() {
       {(Object.keys(A.menu) as Section[]).map(key=><Button key={key} variant={section===key?"default":"ghost"} className="h-auto min-h-11 justify-between whitespace-normal text-start" onClick={()=>{setSection(key);setPerson(undefined);setSearch("");}}><span>{A.menu[key]}</span><span>{counts[key]}</span></Button>)}
     </nav>
     <section className="min-w-0 space-y-4"><h2 className="text-2xl font-bold text-primary">{selected?name(selected):A.menu[section]}</h2>
+      {data.demo&&<div className="space-y-2 border-b border-border pb-3"><Button variant="outline" disabled={jobBusy} onClick={async()=>{setJobBusy(true);try{const r=await jobs({data:{simulate:true}});setJobResult(A.operations.summary(r.processed,r.opened));await Promise.all([qc.invalidateQueries({queryKey:["staff-workspace"]}),qc.invalidateQueries({queryKey:["staff-operations"]})]);}catch{toast.error(t.auth.errors.generic);}finally{setJobBusy(false);}}}>{A.operations.simulate}</Button>{jobResult&&<p role="status">{jobResult}</p>}</div>}
       {selected ? <>
         <Button variant="outline" onClick={()=>setPerson(undefined)}>{A.back}</Button>
         <Table><TableBody>{[
@@ -77,8 +82,8 @@ export function StaffArea() {
         <h3 className="text-xl font-bold">{A.messages}</h3>{data.messages?.map((m,i)=><p key={i} className="border-b border-border py-2">{date(m.created_at)} · {m.body}</p>)}
       </> : section==="urgent" ? <Table><TableHeader><TableRow>{[A.details,A.date,A.status,A.actions].map(x=><TableHead className="text-start" key={x}>{x}</TableHead>)}</TableRow></TableHeader><TableBody>
         {data.alerts.length===0 && <TableRow><TableCell colSpan={4}>{A.empty}</TableCell></TableRow>}
-        {data.alerts.map(a=><TableRow key={`${a.source}:${a.source_id}`}><TableCell><p className="font-semibold">{A.alertKinds[a.kind as keyof typeof A.alertKinds]}</p>{a.sacred&&<span className="bg-warning-bg px-2 text-warning">{A.sacred}</span>}<p className="max-w-sm whitespace-pre-wrap break-words">{a.description}</p>{a.closing_note&&<p>{a.closing_note}</p>}<Button variant="link" onClick={()=>setPerson(a.person_id)}>{A.open}</Button></TableCell><TableCell>{date(a.created_at)}</TableCell><TableCell>{status(a.status)}{a.assigned_to&&<p>{A.assigned}</p>}</TableCell><TableCell>{a.status!=="closed"&&<div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={()=>choose({action:"claim",target:a.source_id,source:a.source as Action["source"]})}>{A.claim}</Button><Button size="sm" onClick={()=>choose({action:"close",target:a.source_id,source:a.source as Action["source"]})}>{A.close}</Button></div>}</TableCell></TableRow>)}
-      </TableBody></Table> : section==="hostings"||section==="attention" ? <p className="text-muted-foreground">{A.next}</p> : <>
+        {data.alerts.map(a=><TableRow key={`${a.source}:${a.source_id}`}><TableCell><p className="font-semibold">{A.alertKinds[a.kind as keyof typeof A.alertKinds]}</p>{a.sacred&&<span className="bg-warning-bg px-2 text-warning">{A.sacred}</span>}<p className="max-w-sm whitespace-pre-wrap break-words">{a.kind==="overdue" ? A.operations.kinds[a.description as keyof typeof A.operations.kinds] : a.description}</p>{a.closing_note&&<p>{a.closing_note}</p>}<Button variant="link" onClick={()=>setPerson(a.person_id)}>{A.open}</Button></TableCell><TableCell>{date(a.created_at)}</TableCell><TableCell>{status(a.status)}{a.assigned_to&&<p>{A.assigned}</p>}</TableCell><TableCell>{a.status!=="closed"&&a.source!=="attention"&&<div className="flex flex-wrap gap-2"><Button size="sm" variant="outline" onClick={()=>choose({action:"claim",target:a.source_id,source:a.source as Action["source"]})}>{A.claim}</Button><Button size="sm" onClick={()=>choose({action:"close",target:a.source_id,source:a.source as Action["source"]})}>{A.close}</Button></div>}{a.source==="attention"&&<Button size="sm" variant="outline" onClick={()=>{setSection("attention");setPerson(undefined);}}>{A.menu.attention}</Button>}</TableCell></TableRow>)}
+      </TableBody></Table> : section==="hostings"||section==="attention"||section==="report"||section==="messages" ? <StaffOperations key={section} section={section} onPerson={setPerson} onRestriction={(action,target)=>choose({action,target})}/> : <>
         {section==="users"&&<Tabs value={tab} onValueChange={setTab}><TabsList><TabsTrigger value="guest">{A.guests}</TabsTrigger><TabsTrigger value="host">{A.hosts}</TabsTrigger></TabsList></Tabs>}
         <Input aria-label={A.search} placeholder={A.search} value={search} onChange={e=>setSearch(e.target.value)}/>
         <Table><TableHeader><TableRow>{[A.name,A.phone,A.city,A.date,A.level,A.actions].map(x=><TableHead className="text-start" key={x}>{x}</TableHead>)}</TableRow></TableHeader><TableBody>

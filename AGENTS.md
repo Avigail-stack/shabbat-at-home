@@ -58,3 +58,5 @@ use the editor.
 - Serious reports derive the reported person from the hosting participants; service-only atomic writes freeze the profile and record urgent staff attention.
 - Scheduled jobs are manually invoked through role-checked server functions; demo staff mutations are restricted to the fixed demo participants.
 - Staff review uses service-only transactional RPCs after authenticated role checks; a persisted mock-code session gates real staff, while fixed demo staff can only read/change fixed demo participants, preventing privilege escalation.
+- Staff hosting/attention operations use service-only scope-checked RPCs; demo time advancement persists only fixed-participant feedback deadlines, while mock message release still checks recipient sacred-time windows.
+- Staff CSV exports use a shared filtered projection and formula-safe quoted cells to preserve report filters and prevent spreadsheet injection.

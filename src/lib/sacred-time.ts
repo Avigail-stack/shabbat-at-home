@@ -16,6 +16,11 @@ export function havdalah(date: string, city: CityLocation = FALLBACK_CITY) {
   const loc = new Location(city.lat, city.lng, true, "Asia/Jerusalem", city.name, "IL");
   return new Zmanim(loc, day(date), false).tzeit(8.5);
 }
+export function simulatedHavdalah(now: Date) {
+  const d = day(israelDate(now));
+  d.setUTCDate(d.getUTCDate() + ((6-d.getUTCDay()+7)%7));
+  return new Date(havdalah(d.toISOString().slice(0,10)).getTime()+3600000);
+}
 /** Consecutive Israeli Yom Tov/Shabbat days form a single protected interval. */
 export function deferredUntil(now: Date, city: CityLocation = FALLBACK_CITY): Date | null {
   const today = israelDate(now);

@@ -1,0 +1,6 @@
+export type ReportHosting = { id: string; guest_id: string; host_id: string; guest_name: string; host_name: string; shabbat_date: string; parsha: string; party_size: number; guest_city: string | null; host_city: string | null; status: string; cancel_reason: string | null; cancel_note: string | null; staff_notes: string | null; tags: string[] };
+export function filterHostings(rows: ReportHosting[], filters: { from: string; to: string; city: string; status: string; name: string }) {
+  return rows.filter(h => (!filters.from || h.shabbat_date >= filters.from) && (!filters.to || h.shabbat_date <= filters.to) && (!filters.city || [h.guest_city,h.host_city].includes(filters.city)) && (!filters.status || h.status === filters.status) && `${h.guest_name} ${h.host_name}`.toLocaleLowerCase().includes(filters.name.toLocaleLowerCase()));
+}
+export function csvCell(value: unknown) { const s = String(value ?? ""); return `"${(/^[\s]*[=+@-]/.test(s) ? "'" : "") + s.replaceAll('"','""')}"`; }
+export function hostingCsv(headers: string[], rows: unknown[][]) { return "\uFEFF" + [headers,...rows].map(row=>row.map(csvCell).join(",")).join("\r\n"); }

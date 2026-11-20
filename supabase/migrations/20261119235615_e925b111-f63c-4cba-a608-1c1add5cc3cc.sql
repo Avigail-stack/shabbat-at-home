@@ -1,0 +1,1 @@
+CREATE POLICY staff_attention_service_only ON public.staff_attention TO service_role USING(true) WITH CHECK(true); CREATE INDEX staff_attention_person_idx ON public.staff_attention(person_id); CREATE INDEX staff_attention_hosting_idx ON public.staff_attention(hosting_id); CREATE INDEX staff_attention_assigned_idx ON public.staff_attention(assigned_to);

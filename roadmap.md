@@ -6,7 +6,11 @@
 - [x] Host approval and manual identity review queues
 - [x] Searchable guest/host tables, person details and audited restrictions
 - [x] 154 unit tests, transactional rollback checks and one short demo-staff browser check
-- [ ] Pass 3b: hostings/report, attention, message/Shabbat queue and mock havdalah job button — deferred as requested
+## Pass 3b
+- [x] Hosting tables/report, filters, CSV, audited staff cancellation and notes
+- [x] Persisted attention rules, handling/results and overdue alerts
+- [x] Message log/queue and isolated demo havdalah jobs
+- [x] Unit tests and one short demo-staff browser check (report export, persisted claim, jobs and message log; no queued/due forms in current fixture)
 
 ## Pass 2e
 - [x] Atomic event outbox, mock-only channel delivery with Shabbat/holiday deferral, Friday reminders and staff-invoked jobs (button deferred to pass 3)
@@ -54,5 +58,5 @@
   - [x] "ההעדפות שלי" (edit questionnaire answers)
   - [x] Host area tabs, guest area, confirmation/decline/cancellation
   - [x] Notifications/inbox, feedback + flag
-- [ ] Pass 3: admin area (staff login, queues, users, hostings, report, logs)
+- [x] Pass 3: admin area (staff login, queues, users, hostings, report, logs)
 - [ ] Pass 4: seed families/guests, tests, polish
