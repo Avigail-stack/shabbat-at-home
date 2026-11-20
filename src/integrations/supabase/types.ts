@@ -1628,6 +1628,7 @@ export type Database = {
         Args: { _availability: string; _uid: string }
         Returns: boolean
       }
+      is_app_member: { Args: { _uid: string }; Returns: boolean }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
       is_valid_il_id: { Args: { id: string }; Returns: boolean }
       list_guest_invitations: { Args: never; Returns: Json }
