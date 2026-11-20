@@ -162,6 +162,11 @@
 }
 
 @layer base {
+  a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex]:not([tabindex="-1"]):focus-visible, summary:focus-visible {
+    outline: 3px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
   * {
     border-color: var(--color-border);
   }

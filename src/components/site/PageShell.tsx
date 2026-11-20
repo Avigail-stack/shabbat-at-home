@@ -6,7 +6,7 @@ export function PageShell({ children, narrow = false }: { children: ReactNode; n
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader />
-      <main className={`mx-auto w-full flex-1 px-4 py-8 ${narrow ? "max-w-xl" : "max-w-5xl"}`}>{children}</main>
+      <main id="main-content" tabIndex={-1} className={`mx-auto w-full flex-1 px-4 focus:outline-none py-8 ${narrow ? "max-w-xl" : "max-w-5xl"}`}>{children}</main>
       <SiteFooter />
     </div>
   );
