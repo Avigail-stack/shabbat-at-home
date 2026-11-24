@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { demoLogin } from "@/lib/demo-login.functions";
 import type { DemoSide } from "@/lib/demo-accounts";
 import { PhoneStep } from "@/components/onboarding/AccountSteps";
+import { parseRole, preferredRoleKey } from "@/lib/stack-reveal";
 import { preAccountPhone, phoneProofState, claimPhoneProof } from "@/lib/registration.functions";
 
 export const Route = createFileRoute("/auth")({
@@ -27,6 +28,10 @@ export const Route = createFileRoute("/auth")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
+  validateSearch: (s: Record<string, unknown>): { role?: "guest" | "host" } => {
+    const role = parseRole(s["role"]);
+    return role ? { role } : {};
+  },
   component: AuthPage,
 });
 
@@ -47,7 +52,9 @@ function AuthPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState("login");
+  const { role: wantedRole } = Route.useSearch();
+  const [tab, setTab] = useState(wantedRole ? "signup" : "login");
+  useEffect(() => { if (wantedRole) sessionStorage.setItem(preferredRoleKey(), wantedRole); }, [wantedRole]);
   const [phoneReady, setPhoneReady] = useState(false);
 
   async function goHome() {

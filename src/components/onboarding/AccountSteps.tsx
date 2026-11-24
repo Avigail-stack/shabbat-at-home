@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { parseRole, preferredRoleKey } from "@/lib/stack-reveal";
 import { toast } from "sonner";
 import { StepFrame } from "./StepFrame";
 import { Choice, TextInput } from "./fields";
@@ -141,6 +142,8 @@ export function DetailsStep({ person, onDone }: { person: Person; onDone: () => 
 
 export function RoleStep({ person, onDone }: { person: Person; onDone: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [preferred, setPreferred] = useState<"guest" | "host" | undefined>();
+  useEffect(() => { setPreferred(parseRole(sessionStorage.getItem(preferredRoleKey()))); }, []);
   async function pick(role: "guest" | "host") {
     setBusy(true);
     const r1 = await supabase.from("user_roles").upsert({ user_id: person.id, role }, { onConflict: "user_id,role", ignoreDuplicates: true });
@@ -150,13 +153,15 @@ export function RoleStep({ person, onDone }: { person: Person; onDone: () => voi
     setBusy(false);
     const err = r1.error ?? r2.error ?? r3.error;
     if (err) return void toast.error(friendlyDbError(err.message));
+    sessionStorage.removeItem(preferredRoleKey());
     onDone();
   }
+  const ring = (r: "guest" | "host") => (preferred === r ? " ring-4 ring-ring ring-offset-2" : "");
   return (
     <StepFrame title={O.role.title}>
       <div className="grid gap-4 sm:grid-cols-2">
-        <Button size="lg" className="min-h-28 text-xl" onClick={() => pick("guest")} disabled={busy}>{O.role.guest}</Button>
-        <Button size="lg" variant="gold" className="min-h-28 text-xl" onClick={() => pick("host")} disabled={busy}>{O.role.host}</Button>
+        <Button size="lg" className={"min-h-28 text-xl" + ring("guest")} autoFocus={preferred === "guest"} aria-pressed={preferred === "guest"} onClick={() => pick("guest")} disabled={busy}>{O.role.guest}</Button>
+        <Button size="lg" variant="gold" className={"min-h-28 text-xl" + ring("host")} autoFocus={preferred === "host"} aria-pressed={preferred === "host"} onClick={() => pick("host")} disabled={busy}>{O.role.host}</Button>
       </div>
     </StepFrame>
   );
