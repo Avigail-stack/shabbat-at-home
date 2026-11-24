@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "@/i18n";
+import { WindowHero } from "./WindowHero";
 import desktopVideo from "@/assets/hero/hero.mp4.asset.json";
 import mobileVideo from "@/assets/hero/hero-mobile.mp4.asset.json";
 import poster from "@/assets/hero/hero-poster.jpg.asset.json";
 
-type Mode = "pending" | "desktop" | "mobile" | "reduced";
+type Mode = "pending" | "desktop" | "desktop-reduced" | "mobile" | "reduced";
 const TRIGGER = 0.6; // scroll progress at which both lines have left the frame
 
 function setScrollLock(locked: boolean) {
@@ -27,7 +28,8 @@ export function HomeHero({ nextId }: { nextId: string }) {
 
   useEffect(() => {
     const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setMode(reduced ? "reduced" : window.innerWidth < 768 ? "mobile" : "desktop");
+    const wide = window.innerWidth >= 768;
+    setMode(wide ? (reduced ? "desktop-reduced" : "desktop") : reduced ? "reduced" : "mobile");
     return () => setScrollLock(false);
   }, []);
 
@@ -101,6 +103,8 @@ export function HomeHero({ nextId }: { nextId: string }) {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [playing, finish]);
+
+  if (mode === "desktop" || mode === "desktop-reduced") return <WindowHero nextId={nextId} reduced={mode === "desktop-reduced"} />;
 
   const src = mode === "mobile" ? mobileVideo.url : desktopVideo.url;
   const ease = Math.min(1, progress / TRIGGER);
