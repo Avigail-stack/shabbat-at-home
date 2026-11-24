@@ -20,6 +20,7 @@ export function HomeHero({ nextId }: { nextId: string }) {
   const [playing, setPlaying] = useState(false);
   const [linesVisible, setLinesVisible] = useState(false);
   const played = useRef(false);
+  const done = useRef(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const skipRef = useRef<HTMLButtonElement>(null);
@@ -31,6 +32,8 @@ export function HomeHero({ nextId }: { nextId: string }) {
   }, []);
 
   const finish = useCallback(() => {
+    if (done.current) return;
+    done.current = true;
     const v = videoRef.current;
     if (v) {
       v.pause();
@@ -49,10 +52,15 @@ export function HomeHero({ nextId }: { nextId: string }) {
     setPlaying(true);
     if (lock) setScrollLock(true);
     const v = videoRef.current;
-    if (v) {
-      v.currentTime = 0;
-      v.play().catch(() => finish());
-    }
+    if (!v) return finish();
+    const tryPlay = () => { v.play().catch(() => finish()); };
+    v.currentTime = 0;
+    if (v.readyState >= 3) tryPlay();
+    else { v.addEventListener("canplay", tryPlay, { once: true }); v.load(); }
+    // Never leave a black screen: if playback hasn't really started in ~4s, move on.
+    window.setTimeout(() => {
+      if (v.paused || v.currentTime === 0) finish();
+    }, 4000);
   }, [finish]);
 
   // Desktop: scroll-driven lines, then video
@@ -113,7 +121,7 @@ export function HomeHero({ nextId }: { nextId: string }) {
 
   return (
     <div ref={wrapRef} className={mode === "desktop" ? "relative h-[260vh] bg-cinema" : "relative bg-cinema"}>
-      <section aria-label={`${H.line1} ${H.line2}`} className="sticky top-0 h-dvh w-full overflow-hidden bg-cinema">
+      <section aria-label={`${H.line1} ${H.line2}`} className={`${playing ? "fixed inset-0 z-40" : "sticky top-0"} h-dvh w-full overflow-hidden bg-cinema`}>
         {mode === "reduced" && !showVideo && (
           <img src={poster.url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
         )}
@@ -128,6 +136,7 @@ export function HomeHero({ nextId }: { nextId: string }) {
             preload="auto"
             aria-label={H.videoLabel}
             onEnded={finish}
+            onError={() => { if (played.current) finish(); }}
             className={`absolute inset-0 h-full w-full bg-cinema object-cover transition-opacity duration-700 ${showVideo ? "opacity-100" : "opacity-0"}`}
           />
         )}
