@@ -46,6 +46,7 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
+  --color-hero-ink: #1c0d05;
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -187,4 +188,10 @@
 @theme {
   --color-cinema: #000000;
   --color-cinema-foreground: #ffffff;
+}
+
+/* Desktop window hero: hide site banner and header while zooming/playing */
+html[data-hero-immersive] body > [role="note"],
+html[data-hero-immersive] header {
+  visibility: hidden;
 }

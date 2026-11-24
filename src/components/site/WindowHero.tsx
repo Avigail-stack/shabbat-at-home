@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { t } from "@/i18n";
-import desktopVideo from "@/assets/hero/hero-mobile.mp4.asset.json";
+import desktopVideo from "@/assets/hero/hero-desktop.mp4.asset.json";
 import poster from "@/assets/hero/window-poster.jpg.asset.json";
 import blind from "@/assets/hero/blind.webp.asset.json";
 import frame from "@/assets/hero/frame.webp.asset.json";
@@ -54,7 +54,7 @@ export function WindowHero({ nextId, reduced }: { nextId: string; reduced: boole
     const r = el.getBoundingClientRect();
     const k = r.width / CW;
     const ww = WIN.w * k, wh = WIN.h * k;
-    const b = boxRef.current!.getBoundingClientRect();
+    const b = { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
     const s = Math.max(b.width / ww, b.height / wh) * 1.03;
     const cx = r.left + (WIN.x + WIN.w / 2) * k, cy = r.top + (WIN.y + WIN.h / 2) * k;
     // scale around the scene centre, then shift window centre to viewport centre
@@ -124,11 +124,17 @@ export function WindowHero({ nextId, reduced }: { nextId: string; reduced: boole
   const blindShift = stage === 0 ? 0 : stage === 1 ? BLIND_H / 2 : BLIND_H;
   const zoomed = stage >= 3 && !reduced;
   const overlayHidden = reduced && stage >= 4;
+  const immersive = stage >= 3 && stage < 5;
+  useEffect(() => {
+    const el = document.documentElement;
+    if (immersive) el.setAttribute("data-hero-immersive", ""); else el.removeAttribute("data-hero-immersive");
+    return () => el.removeAttribute("data-hero-immersive");
+  }, [immersive]);
   const ease = "cubic-bezier(0.16, 1, 0.3, 1)";
 
   return (
     <div className="relative bg-cinema" style={{ height: box ? box.h : "100dvh" }}>
-      <section ref={boxRef} style={{ height: box ? box.h : "100dvh" }} aria-label={`${H.line1} ${H.line2}`} className="relative w-full overflow-hidden bg-cinema">
+      <section ref={boxRef} style={{ height: box ? box.h : "100dvh" }} aria-label={`${H.line1} ${H.line2}`} className={`relative w-full bg-cinema ${immersive ? "z-[55] overflow-visible" : "overflow-hidden"}`}>
         <div
           ref={sceneRef}
           className="absolute left-1/2 top-1/2 [container-type:inline-size]"
@@ -152,7 +158,7 @@ export function WindowHero({ nextId, reduced }: { nextId: string; reduced: boole
             onEnded={finish}
             onError={() => { if (stageRef.current >= 4) finish(); }}
             className="absolute bg-cinema object-cover"
-            style={{ left: pct(WIN.x, CW), top: pct(WIN.y, CH), width: pct(WIN.w, CW), height: pct(WIN.h, CH) }}
+            style={{ transform: "scale(1.04)", left: pct(WIN.x, CW), top: pct(WIN.y, CH), width: pct(WIN.w, CW), height: pct(WIN.h, CH) }}
           />
           <img src={frame.url} alt="" className="pointer-events-none absolute inset-0 h-full w-full"
             style={{ opacity: overlayHidden ? 0 : 1, transition: "opacity 700ms" }} />
@@ -165,7 +171,7 @@ export function WindowHero({ nextId, reduced }: { nextId: string; reduced: boole
                 transform: `translateY(${(-blindShift / CH) * 100}%)`,
                 transition: reduced ? "none" : `transform 800ms ${ease}` }}>
               <img src={blind.url} alt="" className="absolute inset-0 h-full w-full" />
-              <div aria-hidden="true" className="absolute flex flex-col items-center justify-center text-center font-heading font-bold text-primary"
+              <div aria-hidden="true" className="absolute flex flex-col items-center justify-center text-center font-heading font-bold text-hero-ink"
                 style={{ left: 0, right: 0, top: pct(130, CH), height: pct(440, CH), fontSize: "9.6cqw", lineHeight: 1.05 }}>
                 <span>{H.line1}</span>
                 <span>{H.line2}</span>
