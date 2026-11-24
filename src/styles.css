@@ -183,3 +183,8 @@
     font-family: var(--font-sans);
   }
 }
+
+@theme {
+  --color-cinema: #000000;
+  --color-cinema-foreground: #ffffff;
+}

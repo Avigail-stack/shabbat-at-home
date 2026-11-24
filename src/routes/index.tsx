@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/site/PageShell";
 import { CandlesMark } from "@/components/site/Logo";
 import { t } from "@/i18n";
+import { HomeHero } from "@/components/site/HomeHero";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,8 +22,8 @@ export const Route = createFileRoute("/")({
 function Landing() {
   const L = t.landing;
   return (
-    <PageShell>
-      <section className="flex flex-col items-center py-10 text-center md:py-16">
+    <PageShell hero={<HomeHero nextId="home-content" />}>
+      <section id="home-content" className="scroll-mt-16 flex flex-col items-center py-10 text-center md:py-16">
         <CandlesMark className="h-16 w-16" />
         <h1 className="mt-4 text-4xl font-bold leading-tight text-primary md:text-6xl">{t.app.tagline}</h1>
         <p className="mt-5 max-w-2xl text-lg text-muted-foreground">{L.lead}</p>
