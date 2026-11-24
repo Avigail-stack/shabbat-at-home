@@ -108,7 +108,7 @@ export function HomeHero({ nextId }: { nextId: string }) {
 
   const src = mode === "mobile" ? mobileVideo.url : desktopVideo.url;
   const ease = Math.min(1, progress / TRIGGER);
-  const shift = mode === "desktop" ? ease * 65 : 0; // vh
+  const shift = 0; // desktop uses WindowHero
 
   const lines = (
     <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center font-heading text-5xl font-bold leading-tight text-cinema-foreground md:text-8xl">
@@ -124,7 +124,7 @@ export function HomeHero({ nextId }: { nextId: string }) {
   );
 
   return (
-    <div ref={wrapRef} className={mode === "desktop" ? "relative h-[260vh] bg-cinema" : "relative bg-cinema"}>
+    <div ref={wrapRef} className={"relative bg-cinema"}>
       <section aria-label={`${H.line1} ${H.line2}`} className={`${playing ? "fixed inset-0 z-40" : "sticky top-0"} h-dvh w-full overflow-hidden bg-cinema`}>
         {mode === "reduced" && !showVideo && (
           <img src={poster.url} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" />
